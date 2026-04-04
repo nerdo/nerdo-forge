@@ -1,0 +1,13 @@
+{
+  "name": "nerdo-plugins",
+  "owner": {
+    "name": "nerdo"
+  },
+  "plugins": [
+    {
+      "name": "nerdo-forge",
+      "version": "1.0.0",
+      "description": "Custom statusline with jj/language detection and Disciplined Engineering output style"
+    }
+  ]
+}
