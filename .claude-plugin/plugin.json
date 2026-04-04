@@ -1,0 +1,15 @@
+{
+  "name": "nerdo-claude",
+  "version": "1.0.0",
+  "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
+  "author": {
+    "name": "nerdo"
+  },
+  "license": "MIT",
+  "keywords": [
+    "statusline",
+    "jujutsu",
+    "output-style",
+    "engineering"
+  ]
+}
