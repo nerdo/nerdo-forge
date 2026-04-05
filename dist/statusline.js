@@ -9,6 +9,11 @@ var cyan = "\x1B[36m";
 var yellow = "\x1B[93m";
 var blue = "\x1B[34m";
 var red = "\x1B[91m";
+var green = "\x1B[32m";
+var bgGreen = "\x1B[42m";
+var bgYellow = "\x1B[43m";
+var bgRed = "\x1B[41m";
+var bgDimmed = "\x1B[48;5;238m";
 function run(cmd) {
   try {
     return execSync(cmd, { timeout: 5000, stdio: ["pipe", "pipe", "pipe"] }).toString().trim();
@@ -67,6 +72,40 @@ function getJjInfo() {
   ${cyan}Parent commit ${cyan}(@-)${reset}: ${yellow}${parentChangeId}${reset} ${parentDescDisplay}`
   ].join("");
 }
+function formatTokenCount(n) {
+  if (n >= 1e6)
+    return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1000)
+    return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+function getTokenDisplay(contextWindow) {
+  if (!contextWindow)
+    return "";
+  const input = contextWindow.total_input_tokens ?? 0;
+  const output = contextWindow.total_output_tokens ?? 0;
+  const total = input + output;
+  const pct = contextWindow.used_percentage ?? 0;
+  if (total === 0 && pct === 0)
+    return "";
+  const barWidth = 10;
+  const filled = Math.round(pct / 100 * barWidth);
+  const empty = barWidth - filled;
+  let barColor;
+  let pctColor;
+  if (pct < 50) {
+    barColor = bgGreen;
+    pctColor = green;
+  } else if (pct < 80) {
+    barColor = bgYellow;
+    pctColor = yellow;
+  } else {
+    barColor = bgRed;
+    pctColor = red;
+  }
+  const bar = `${barColor}${" ".repeat(filled)}${reset}${bgDimmed}${" ".repeat(empty)}${reset}`;
+  return ` ${dimmed}${formatTokenCount(total)}${reset} ${bar} ${pctColor}${pct}%${reset}`;
+}
 function getLangInfo(currentDir) {
   const parts = [];
   if (existsSync(join(currentDir, "package.json"))) {
@@ -121,6 +160,7 @@ function main() {
     const projectDir = input.workspace?.project_dir ?? input.workspace?.current_dir ?? input.cwd ?? process.cwd();
     const dir = getDirectoryDisplay(currentDir, projectDir);
     const langInfo = getLangInfo(currentDir);
+    const tokenDisplay = getTokenDisplay(input.context_window);
     const jjInfo = getJjInfo();
     let line = `${reset}${dir.emoji} ${white}${dir.name}${reset}`;
     if (langInfo) {
@@ -131,6 +171,9 @@ function main() {
       line += `${white}${outputStyle}${reset} ${dimmed}(${modelName})${reset}`;
     } else {
       line += `${dimmed}(${modelName})${reset}`;
+    }
+    if (tokenDisplay) {
+      line += tokenDisplay;
     }
     if (jjInfo) {
       line += jjInfo;

@@ -10,6 +10,12 @@ const cyan = "\x1b[36m";
 const yellow = "\x1b[93m";
 const blue = "\x1b[34m";
 const red = "\x1b[91m";
+const green = "\x1b[32m";
+const magenta = "\x1b[35m";
+const bgGreen = "\x1b[42m";
+const bgYellow = "\x1b[43m";
+const bgRed = "\x1b[41m";
+const bgDimmed = "\x1b[48;5;238m";
 
 interface StatusLineInput {
   model: { display_name?: string };
@@ -17,6 +23,11 @@ interface StatusLineInput {
   workspace: {
     current_dir?: string;
     project_dir?: string;
+  };
+  context_window?: {
+    total_input_tokens?: number;
+    total_output_tokens?: number;
+    used_percentage?: number;
   };
   cwd?: string;
   transcript_path?: string;
@@ -102,6 +113,45 @@ function getJjInfo(): string | null {
   ].join("");
 }
 
+function formatTokenCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
+
+function getTokenDisplay(contextWindow?: StatusLineInput["context_window"]): string {
+  if (!contextWindow) return "";
+
+  const input = contextWindow.total_input_tokens ?? 0;
+  const output = contextWindow.total_output_tokens ?? 0;
+  const total = input + output;
+  const pct = contextWindow.used_percentage ?? 0;
+
+  if (total === 0 && pct === 0) return "";
+
+  // Progress bar: 10 chars wide, color-coded by usage
+  const barWidth = 10;
+  const filled = Math.round((pct / 100) * barWidth);
+  const empty = barWidth - filled;
+
+  let barColor: string;
+  let pctColor: string;
+  if (pct < 50) {
+    barColor = bgGreen;
+    pctColor = green;
+  } else if (pct < 80) {
+    barColor = bgYellow;
+    pctColor = yellow;
+  } else {
+    barColor = bgRed;
+    pctColor = red;
+  }
+
+  const bar = `${barColor}${" ".repeat(filled)}${reset}${bgDimmed}${" ".repeat(empty)}${reset}`;
+
+  return ` ${dimmed}${formatTokenCount(total)}${reset} ${bar} ${pctColor}${pct}%${reset}`;
+}
+
 function getLangInfo(currentDir: string): string {
   const parts: string[] = [];
 
@@ -166,6 +216,7 @@ function main() {
 
     const dir = getDirectoryDisplay(currentDir, projectDir);
     const langInfo = getLangInfo(currentDir);
+    const tokenDisplay = getTokenDisplay(input.context_window);
     const jjInfo = getJjInfo();
 
     // Build first line
@@ -181,6 +232,10 @@ function main() {
       line += `${white}${outputStyle}${reset} ${dimmed}(${modelName})${reset}`;
     } else {
       line += `${dimmed}(${modelName})${reset}`;
+    }
+
+    if (tokenDisplay) {
+      line += tokenDisplay;
     }
 
     if (jjInfo) {

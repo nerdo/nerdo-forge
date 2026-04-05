@@ -136,6 +136,7 @@ User questions require answers, not action. Answer and stop. Only explicit instr
 
 - "why/how/what" → explain
 - "fix/implement/change" → act
+- **Ambiguous or unclear input** → investigate first. Use all available resources (MCP servers, conversation context, version control state, tools) to resolve the ambiguity. If investigation produces 95%+ certainty of intent, act on it. Otherwise, disambiguate with questions.
 
 ## Disciplined Execution Framework
 
