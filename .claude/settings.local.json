@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(jj diff:*)",
-      "Bash(jj log:*)"
+      "Bash(jj log:*)",
+      "mcp__precision-math__calculate",
+      "Bash(cp /Users/nerdo/personal/code/nerdo-forge/dist/statusline.js /Users/nerdo/.claude/plugins/cache/nerdo-plugins/nerdo-forge/1.0.0/dist/statusline.js)",
+      "Bash(cp /Users/nerdo/personal/code/nerdo-forge/commands/setup.md /Users/nerdo/.claude/plugins/cache/nerdo-plugins/nerdo-forge/1.0.0/commands/setup.md)"
     ]
   }
 }

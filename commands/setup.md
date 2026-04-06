@@ -33,6 +33,12 @@ Replace `<plugin_root>` with the actual resolved path from step 1.
 
 Preserve all existing settings. Only modify the `statusLine` field.
 
+## 3. Enable verbose mode
+
+Read `~/.claude.json`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-forge context usage bar.
+
+Preserve all existing data. Only modify the `verbose` field.
+
 ## 4. Confirm output style availability
 
 Verify the output style file exists at `<plugin_root>/output-styles/Disciplined Engineering.md`.

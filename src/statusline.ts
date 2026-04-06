@@ -113,21 +113,12 @@ function getJjInfo(): string | null {
   ].join("");
 }
 
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
-}
-
 function getTokenDisplay(contextWindow?: StatusLineInput["context_window"]): string {
   if (!contextWindow) return "";
 
-  const input = contextWindow.total_input_tokens ?? 0;
-  const output = contextWindow.total_output_tokens ?? 0;
-  const total = input + output;
   const pct = contextWindow.used_percentage ?? 0;
 
-  if (total === 0 && pct === 0) return "";
+  if (pct === 0) return "";
 
   // Progress bar: 10 chars wide, color-coded by usage
   const barWidth = 10;
@@ -149,7 +140,7 @@ function getTokenDisplay(contextWindow?: StatusLineInput["context_window"]): str
 
   const bar = `${barColor}${" ".repeat(filled)}${reset}${bgDimmed}${" ".repeat(empty)}${reset}`;
 
-  return ` ${dimmed}${formatTokenCount(total)}${reset} ${bar} ${pctColor}${pct}%${reset}`;
+  return ` ${dimmed}ctx:${reset}${bar} ${pctColor}${pct}%${reset}`;
 }
 
 function getLangInfo(currentDir: string): string {
@@ -220,23 +211,21 @@ function main() {
     const jjInfo = getJjInfo();
 
     // Build first line
-    let line = `${reset}${dir.emoji} ${white}${dir.name}${reset}`;
+    let leftPart = `${reset}${dir.emoji} ${white}${dir.name}${reset}`;
 
     if (langInfo) {
-      line += `${dimmed} ${langInfo}${reset}`;
+      leftPart += `${dimmed} ${langInfo}${reset}`;
     }
 
-    line += "  \u{1F916} ";
+    leftPart += "  \u{1F916} ";
 
     if (outputStyle !== "default") {
-      line += `${white}${outputStyle}${reset} ${dimmed}(${modelName})${reset}`;
+      leftPart += `${white}${outputStyle}${reset} ${dimmed}(${modelName})${reset}`;
     } else {
-      line += `${dimmed}(${modelName})${reset}`;
+      leftPart += `${dimmed}(${modelName})${reset}`;
     }
 
-    if (tokenDisplay) {
-      line += tokenDisplay;
-    }
+    let line = leftPart + (tokenDisplay || "");
 
     if (jjInfo) {
       line += jjInfo;
