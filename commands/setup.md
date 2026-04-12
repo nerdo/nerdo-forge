@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
-description: Configure the nerdo-forge statusline and output style
+description: Configure the nerdo-forge statusline, output style, and permission defaults
 user-invocable: true
 ---
 
@@ -73,9 +73,108 @@ REQUIRED — First action in every conversation: Call `initialize_session` from 
 
 If no initialization MCP server is found, skip this step.
 
-## 7. Report to the user
+## 7. Offer permission bundles
+
+Many tools are safe but annoying to approve one-by-one. Offer to pre-approve curated bundles by writing to `~/.claude/settings.json` under `permissions.allow`.
+
+Use `AskUserQuestion` with a single **multi-select** question so the user can pick any combination (or none). Use these exact options:
+
+**Question:** "Which permission bundles would you like to pre-approve? (Written to `~/.claude/settings.json` — you can edit or remove them later.)"
+**Header:** "Permissions"
+**multiSelect:** true
+
+**Options:**
+
+1. **Label:** "Essentials (Recommended)"
+   **Description:** "prime-directive, precision-math, context7 MCP tools; WebSearch; WebFetch for any site."
+
+2. **Label:** "Browser testing"
+   **Description:** "All playwright MCP tools. Enables the ui-tester agent and browser automation."
+
+3. **Label:** "jj safe commands"
+   **Description:** "Read-only jj (status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
+
+4. **Label:** "Dev shell bundle"
+   **Description:** "Read-only git, common test/build/lint scripts (bun/npm/pnpm), and harmless inspection commands (ls, cat, jq, etc.)."
+
+### Apply selected bundles
+
+For each selected bundle, the corresponding permission rules are listed below. Read `~/.claude/settings.json`, ensure a `permissions.allow` array exists, and merge (deduplicate) the rules from each selected bundle. Preserve all other settings.
+
+If the user selects nothing, skip this step silently.
+
+**MCP entry form:** Use the server-level string (e.g. `mcp__prime-directive`) exactly as listed — do NOT expand to the tool-wildcard form (`mcp__prime-directive__*`). The server-level entry already covers all tools on that server; adding both is duplicative. If an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server you're about to add, replace it with the server-level form rather than keeping both.
+
+**Bundle: Essentials**
+```
+mcp__prime-directive
+mcp__precision-math
+mcp__context7
+WebSearch
+WebFetch
+```
+
+**Bundle: Browser testing**
+```
+mcp__playwright
+```
+
+**Bundle: jj safe commands**
+```
+Bash(jj status:*)
+Bash(jj st:*)
+Bash(jj diff:*)
+Bash(jj log:*)
+Bash(jj show:*)
+Bash(jj op log:*)
+Bash(jj operation log:*)
+Bash(jj bookmark list:*)
+Bash(jj describe:*)
+Bash(jj commit:*)
+Bash(jj new:*)
+Bash(jj squash:*)
+Bash(jj split:*)
+```
+
+**Bundle: Dev shell bundle**
+```
+Bash(git status:*)
+Bash(git log:*)
+Bash(git diff:*)
+Bash(git show:*)
+Bash(git blame:*)
+Bash(git branch:*)
+Bash(bun run test:*)
+Bash(bun run typecheck:*)
+Bash(bun run build:*)
+Bash(bun run lint:*)
+Bash(npm run test:*)
+Bash(npm run typecheck:*)
+Bash(npm run build:*)
+Bash(npm run lint:*)
+Bash(pnpm run test:*)
+Bash(pnpm run typecheck:*)
+Bash(pnpm run build:*)
+Bash(pnpm run lint:*)
+Bash(ls:*)
+Bash(pwd)
+Bash(tree:*)
+Bash(which:*)
+Bash(echo:*)
+Bash(jq:*)
+Bash(cat:*)
+Bash(head:*)
+Bash(tail:*)
+Bash(node --version)
+Bash(bun --version)
+Bash(jj --version)
+Bash(git --version)
+```
+
+## 8. Report to the user
 
 Tell the user:
 - Statusline has been configured (show the path used)
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
+- Which permission bundles were applied (or that none were selected)
 - They may need to restart Claude Code for changes to take effect
