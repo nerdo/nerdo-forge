@@ -109,7 +109,32 @@ Invoke plugin agents by their prefixed name during testing: `nerdo-forge:researc
 
 1. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
 2. Commit and push to the marketplace repo.
-3. Users on other machines run `/plugin update nerdo-forge@nerdo-plugins`.
+3. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
+
+### Installing an updated version (CONFIRMED PROCEDURE)
+
+The key insight: `/plugin install` and `/plugin update` both read from a **cached marketplace manifest**. Bumping the version in your source `marketplace.json` is invisible until the marketplace cache is refreshed explicitly. For this plugin's directory-sourced marketplace, the cache has a `lastUpdated` timestamp in `~/.claude/plugins/known_marketplaces.json` and does not refresh automatically.
+
+The sequence that actually works:
+
+```
+/plugin marketplace update                # refresh the manifest cache; UI lists new versions
+/plugin uninstall nerdo-forge@nerdo-plugins
+/plugin install nerdo-forge@nerdo-plugins
+/nerdo-forge:setup                        # re-run setup to re-apply AI-driven steps
+```
+
+`/plugin marketplace update` is the critical step and is easy to miss — it is a **different command** from `/plugin update`. `/reload-plugins` does not refresh marketplaces; it only reloads already-installed plugins from their cache dirs.
+
+**Why `/nerdo-forge:setup` must follow an update:** Some setup writes point at the *specific installed version path*. The statusline entry in `~/.claude/settings.json` embeds the cache dir (e.g. `.../nerdo-forge/1.3.0/dist/statusline.js`) — after installing 1.4.0, that path is stale and the statusline will try to execute a file from the old cache dir (which may be GC'd within ~7 days). Re-running setup also gives the opportunity to re-apply permission bundles or the MCP init directive if the new version's setup procedure has changed.
+
+### Known issue: `/plugin update` does not work in this environment
+
+`/plugin update nerdo-forge@nerdo-plugins` silently no-ops on this user's machine even after refreshing the marketplace cache. Do not recommend it. Use the uninstall + install pair from the procedure above.
+
+### Local dev bypasses all of this
+
+For the development machine, use `--plugin-dir` (see "Local development" above). It reads the source directory directly, skips the marketplace manifest entirely, and `/reload-plugins` picks up edits in the current session — so none of the cache-refresh steps above are needed during iteration.
 
 ### Hazards to avoid
 
