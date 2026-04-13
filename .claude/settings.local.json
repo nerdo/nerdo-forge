@@ -6,7 +6,10 @@
       "mcp__precision-math__calculate",
       "Bash(cp /Users/nerdo/personal/code/nerdo-forge/dist/statusline.js /Users/nerdo/.claude/plugins/cache/nerdo-plugins/nerdo-forge/1.0.0/dist/statusline.js)",
       "Bash(cp /Users/nerdo/personal/code/nerdo-forge/commands/setup.md /Users/nerdo/.claude/plugins/cache/nerdo-plugins/nerdo-forge/1.0.0/commands/setup.md)",
-      "Bash(jj commit:*)"
+      "Bash(jj commit:*)",
+      "Read(//Users/nerdo/personal/ai-settings/claudecode/agents/**)",
+      "Read(//Users/nerdo/.claude/plugins/**)",
+      "Skill(nerdo-forge:setup)"
     ]
   }
 }

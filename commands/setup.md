@@ -97,6 +97,9 @@ Use `AskUserQuestion` with a single **multi-select** question so the user can pi
 4. **Label:** "Dev shell bundle"
    **Description:** "Read-only git, common test/build/lint scripts (bun/npm/pnpm), and harmless inspection commands (ls, cat, jq, etc.)."
 
+5. **Label:** "GitHub CLI (read-only)"
+   **Description:** "Read-only gh subcommands (pr/issue/release/run/workflow view+list, search, repo view). Excludes mutating operations and raw `gh api` (which can POST/PUT/DELETE)."
+
 ### Apply selected bundles
 
 For each selected bundle, the corresponding permission rules are listed below. Read `~/.claude/settings.json`, ensure a `permissions.allow` array exists, and merge (deduplicate) the rules from each selected bundle. Preserve all other settings.
@@ -169,6 +172,32 @@ Bash(node --version)
 Bash(bun --version)
 Bash(jj --version)
 Bash(git --version)
+```
+
+**Bundle: GitHub CLI (read-only)**
+```
+Bash(gh pr view:*)
+Bash(gh pr list:*)
+Bash(gh pr diff:*)
+Bash(gh pr status:*)
+Bash(gh pr checks:*)
+Bash(gh issue view:*)
+Bash(gh issue list:*)
+Bash(gh issue status:*)
+Bash(gh release view:*)
+Bash(gh release list:*)
+Bash(gh release download:*)
+Bash(gh repo view:*)
+Bash(gh repo list:*)
+Bash(gh run view:*)
+Bash(gh run list:*)
+Bash(gh run watch:*)
+Bash(gh run download:*)
+Bash(gh workflow view:*)
+Bash(gh workflow list:*)
+Bash(gh search:*)
+Bash(gh auth status:*)
+Bash(gh --version)
 ```
 
 ## 8. Report to the user
