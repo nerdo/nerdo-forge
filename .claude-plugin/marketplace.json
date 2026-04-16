@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "nerdo-forge",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
       "source": "./"
     }

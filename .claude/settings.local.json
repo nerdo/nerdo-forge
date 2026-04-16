@@ -7,7 +7,8 @@
       "Bash(jj commit:*)",
       "Read(//Users/nerdo/personal/ai-settings/claudecode/agents/**)",
       "Read(//Users/nerdo/.claude/plugins/**)",
-      "Skill(nerdo-forge:setup)"
+      "Skill(nerdo-forge:setup)",
+      "Skill(update-config)"
     ]
   }
 }

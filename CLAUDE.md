@@ -4,7 +4,7 @@ This file governs how Claude Code should behave when editing this plugin. For us
 
 ## Plugin purpose
 
-nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), and a setup skill. Agents here are spawned as subagents by the user's main Claude Code session.
+nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), session hooks (`hooks/`), and a setup skill. Agents here are spawned as subagents by the user's main Claude Code session.
 
 ## Agent authoring conventions
 
