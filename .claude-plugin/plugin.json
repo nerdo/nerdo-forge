@@ -1,6 +1,6 @@
 {
   "name": "nerdo-forge",
-  "version": "1.5.0",
+  "version": "1.6.1",
   "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
   "author": {
     "name": "nerdo"
@@ -13,22 +13,12 @@
     "engineering"
   ],
   "hooks": {
-    "SessionStart": [
+    "UserPromptSubmit": [
       {
-        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/prime-directive-init.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/prime-directive-init.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/prime-directive-protocol.sh"
           }
         ]
       }

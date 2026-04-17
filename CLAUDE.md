@@ -105,11 +105,24 @@ This loads the plugin directly from the filesystem with no caching. Use `/reload
 
 Invoke plugin agents by their prefixed name during testing: `nerdo-forge:researcher`, `nerdo-forge:root-cause-analyzer`, `nerdo-forge:ui-tester`.
 
+### Verifying changes before push
+
+Every change must be exercised locally before the release flow. Use `--plugin-dir` (above), then touch every surface the change affects:
+
+- **Hooks** — trigger the event and confirm the injected output reaches the host model. `UserPromptSubmit` fires on every prompt; other types (`SessionStart`, `PreToolUse`, `PostToolUse`, etc.) fire on their own triggers. Run the session with `claude --debug hooks --plugin-dir .` to watch hook execution live. For output-injecting hooks, ask the model to quote or reference the injected text — confirms the content arrived, not just that the script ran.
+- **Agents** — invoke by prefixed name (`nerdo-forge:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
+- **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
+- **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
+- **Output styles** — switch via `/output-style` and confirm formatting.
+
+`/reload-plugins` picks up edits mid-session; no need to restart between iterations.
+
 ### Release flow
 
-1. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
-2. Commit and push to the marketplace repo.
-3. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
+1. **Test locally first** (see "Verifying changes before push" above). Do not bump the version until every affected surface has been exercised.
+2. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
+3. Commit and push to the marketplace repo.
+4. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
 
 ### Installing an updated version (CONFIRMED PROCEDURE)
 
