@@ -86,40 +86,96 @@ Actions:
 
 Do NOT add a new directive under any circumstances — the hook supersedes it.
 
-## 8. Offer permission bundles
+## 8. Reconcile permission bundles
 
-Many tools are safe but annoying to approve one-by-one. Offer to pre-approve curated bundles by writing to `~/.claude/settings.json` under `permissions.allow`.
+Many tools are safe but annoying to approve one-by-one. This step reconciles `~/.claude/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
 
-Use `AskUserQuestion` with a single **multi-select** question so the user can pick any combination (or none). Use these exact options:
+The goal is an idempotent, symmetric operation: running setup repeatedly with the same selections should produce no change, and unchecking a previously-applied bundle should actually remove it.
 
-**Question:** "Which permission bundles would you like to pre-approve? (Written to `~/.claude/settings.json` — you can edit or remove them later.)"
+### 8a. Inspect current state
+
+Read `~/.claude/settings.json` and, for each of the five bundles listed in §8d, compute the current state by exact-string comparison against `permissions.allow`:
+
+- **ON** — every rule in the bundle is present
+- **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
+- **OFF** — no rules from the bundle are present
+
+Display the result to the user verbatim before asking anything, for example:
+
+> Current permission bundle state:
+> - Essentials: ON
+> - Browser testing: ON
+> - jj safe commands: PARTIAL (11/13)
+> - Dev shell bundle: OFF
+> - GitHub CLI (read-only): ON
+
+### 8b. Ask whether to change anything
+
+Use `AskUserQuestion`:
+
+**Question:** "The current bundle state is shown above. Do you want to review and change it? Selecting 'No' leaves `permissions.allow` untouched. Selecting 'Yes' asks which bundles should be ACTIVE at the end — any bundle you leave unchecked will have its rules REMOVED from `permissions.allow`."
 **Header:** "Permissions"
-**multiSelect:** true
+**multiSelect:** false
 
 **Options:**
 
-1. **Label:** "Essentials (Recommended)"
+1. **Label:** "No, leave as-is"
+   **Description:** "Skip this step. `permissions.allow` is not touched."
+
+2. **Label:** "Yes, review and adjust"
+   **Description:** "Show the bundle selector. Declare the desired end state explicitly; setup adds missing rules for checked bundles and removes rules for unchecked ones."
+
+If the user chose "No", skip to §9.
+
+### 8c. Collect desired end state
+
+`AskUserQuestion` caps options at four per question, so split the five bundles into two questions. For every option, append the current state from §8a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
+
+**Question 1:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
+**Header:** "Bundles 1/2"
+**multiSelect:** true
+
+**Options** (append the live state string to each label):
+
+1. **Label:** "Essentials (Recommended) — currently <state>"
    **Description:** "prime-directive, precision-math, context7 MCP tools; WebSearch; WebFetch for any site."
 
-2. **Label:** "Browser testing"
+2. **Label:** "Browser testing — currently <state>"
    **Description:** "All playwright MCP tools. Enables the ui-tester agent and browser automation."
 
-3. **Label:** "jj safe commands"
+3. **Label:** "jj safe commands — currently <state>"
    **Description:** "Read-only jj (status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
 
-4. **Label:** "Dev shell bundle"
+4. **Label:** "Dev shell bundle — currently <state>"
    **Description:** "Read-only git, common test/build/lint scripts (bun/npm/pnpm), and harmless inspection commands (ls, cat, jq, etc.)."
 
-5. **Label:** "GitHub CLI (read-only)"
-   **Description:** "Read-only gh subcommands (pr/issue/release/run/workflow view+list, search, repo view). Excludes mutating operations and raw `gh api` (which can POST/PUT/DELETE)."
+**Question 2:** "Should the GitHub CLI (read-only) bundle be ACTIVE at the end? Currently `<state>`."
+**Header:** "Bundles 2/2"
+**multiSelect:** false
 
-### Apply selected bundles
+**Options:**
 
-For each selected bundle, the corresponding permission rules are listed below. Read `~/.claude/settings.json`, ensure a `permissions.allow` array exists, and merge (deduplicate) the rules from each selected bundle. Preserve all other settings.
+1. **Label:** "Active — keep or add gh read-only rules"
+   **Description:** "Ensures every rule from the GitHub CLI bundle is present in `permissions.allow`."
 
-If the user selects nothing, skip this step silently.
+2. **Label:** "Inactive — remove gh read-only rules"
+   **Description:** "Removes every rule from the GitHub CLI bundle from `permissions.allow`."
 
-**MCP entry form:** Use the server-level string (e.g. `mcp__prime-directive`) exactly as listed — do NOT expand to the tool-wildcard form (`mcp__prime-directive__*`). The server-level entry already covers all tools on that server; adding both is duplicative. If an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server you're about to add, replace it with the server-level form rather than keeping both.
+### 8d. Apply the desired end state
+
+For each of the five bundles, using the exact rule lists below:
+
+- **Selected (ACTIVE):** ensure every rule string is present in `permissions.allow`. Add missing rules at the end of the array. Do not duplicate.
+- **Unselected (INACTIVE):** remove every rule string in the bundle from `permissions.allow` by exact match.
+
+If a rule string appears in more than one bundle and at least one of those bundles is selected, keep the rule (it is required by the selected bundle).
+
+Rules in `permissions.allow` that are not listed in any bundle are preserved exactly as they are.
+
+**MCP entry form:** Use the server-level string (e.g. `mcp__prime-directive`) exactly as listed — do NOT expand to the tool-wildcard form (`mcp__prime-directive__*`). The server-level entry already covers all tools on that server; adding both is duplicative.
+
+- **When ADDING:** if an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server being added, replace it with the server-level form rather than keeping both.
+- **When REMOVING:** remove only the exact bundle rule string (the server-level form). Leave any wildcard or user-specific variant alone so the user can clean it up manually if they choose.
 
 **Bundle: Essentials**
 ```
@@ -220,5 +276,5 @@ Tell the user:
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
 - Auto-memory status (disabled, or left on)
 - Obsolete MCP init directive status (removed from `~/.claude/CLAUDE.md`, or no directive was present)
-- Which permission bundles were applied (or that none were selected)
+- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §8b, say so. Otherwise, for each of the five bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
 - They may need to restart Claude Code for changes to take effect
