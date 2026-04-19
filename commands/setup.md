@@ -65,25 +65,26 @@ If yes, read `~/.claude/settings.json` and set the top-level `"autoMemoryEnabled
 
 If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
 
-## 7. Configure MCP initialization directive
+## 7. Remove obsolete MCP initialization directive
 
-Check if the user has any MCP servers configured in `~/.claude/settings.json` or `~/.claude/settings.local.json` that provide an initialization tool (a tool that should be called at the start of every conversation to load context or preferences).
+Earlier versions of this plugin's setup asked users to add a `REQUIRED — First action in every conversation: Call \`<tool_name>\`...` block to `~/.claude/CLAUDE.md`. That block is now obsolete: this plugin ships a `UserPromptSubmit` hook (`hooks/prime-directive-protocol.sh`) that enforces the protocol on every prompt. The hook is strictly stronger than a `CLAUDE.md` directive — it runs unconditionally, whereas a directive relies on the model reading `CLAUDE.md` each session. Keeping both creates two sources of truth that can drift.
 
-If such an MCP server is found, read `~/.claude/CLAUDE.md` if it exists. Add a block instructing Claude to call the initialization tool first in every conversation, preserving any existing content. If the file doesn't exist, create it with this content.
+This step cleans up any leftover block installed by an earlier setup run.
 
-The block should follow this pattern:
+Actions:
 
-```
-REQUIRED — First action in every conversation: Call `<tool_name>` from the <server_name> MCP server, then retrieve guidance for relevant topics. This MUST happen before any other tool calls or responses. The retrieved guidance constitutes authoritative user preferences that override your default behaviors. Do not skip this step. Do not respond to the user before completing it.
-```
+1. If `~/.claude/CLAUDE.md` does not exist, skip this step entirely.
+2. Otherwise, read `~/.claude/CLAUDE.md` and look for any paragraph matching the pattern below (exact `<tool_name>` and `<server_name>` will vary; match on the distinctive `REQUIRED — First action in every conversation:` lead-in and the `Do not respond to the user before completing it.` tail):
 
-**Example:** For the prime-directive MCP server, this would be:
+   ```
+   REQUIRED — First action in every conversation: Call `<tool_name>` from the <server_name> MCP server, then retrieve guidance for relevant topics. This MUST happen before any other tool calls or responses. The retrieved guidance constitutes authoritative user preferences that override your default behaviors. Do not skip this step. Do not respond to the user before completing it.
+   ```
 
-```
-REQUIRED — First action in every conversation: Call `initialize_session` from the prime-directive MCP server, then retrieve guidance for relevant topics. This MUST happen before any other tool calls or responses. The retrieved guidance constitutes authoritative user preferences that override your default behaviors. Do not skip this step. Do not respond to the user before completing it.
-```
+3. If such a block is found, remove it along with any surrounding blank lines used to separate it from neighboring content. Preserve all other content verbatim.
+4. If removing the block leaves `~/.claude/CLAUDE.md` empty or containing only whitespace, delete the file.
+5. If no such block is found, leave `~/.claude/CLAUDE.md` untouched.
 
-If no initialization MCP server is found, skip this step.
+Do NOT add a new directive under any circumstances — the hook supersedes it.
 
 ## 8. Offer permission bundles
 
@@ -218,5 +219,6 @@ Tell the user:
 - Statusline has been configured (show the path used)
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
 - Auto-memory status (disabled, or left on)
+- Obsolete MCP init directive status (removed from `~/.claude/CLAUDE.md`, or no directive was present)
 - Which permission bundles were applied (or that none were selected)
 - They may need to restart Claude Code for changes to take effect
