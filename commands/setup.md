@@ -53,7 +53,19 @@ If yes, add `"outputStyle": "Disciplined Engineering"` to `~/.claude/settings.js
 
 If no, skip this step.
 
-## 6. Configure MCP initialization directive
+## 6. Ask about disabling auto-memory
+
+Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `~/.claude/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. For users who rely on an authoritative source of guidance (e.g. the prime-directive MCP), auto-memory can drift from that source and introduce contradictions — a snapshot competing with a living document.
+
+Ask the user:
+
+> Claude Code's auto-memory writes notes to `~/.claude/projects/<project>/memory/` based on your corrections. If you maintain authoritative guidance elsewhere (e.g. a prime-directive MCP), auto-memory can drift from it and cause contradictions. Would you like to **disable auto-memory**? (This writes `"autoMemoryEnabled": false` to `~/.claude/settings.json`. Existing memory files are left alone — you can archive or delete them separately.)
+
+If yes, read `~/.claude/settings.json` and set the top-level `"autoMemoryEnabled"` field to `false`. Preserve all other settings.
+
+If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
+
+## 7. Configure MCP initialization directive
 
 Check if the user has any MCP servers configured in `~/.claude/settings.json` or `~/.claude/settings.local.json` that provide an initialization tool (a tool that should be called at the start of every conversation to load context or preferences).
 
@@ -73,7 +85,7 @@ REQUIRED — First action in every conversation: Call `initialize_session` from 
 
 If no initialization MCP server is found, skip this step.
 
-## 7. Offer permission bundles
+## 8. Offer permission bundles
 
 Many tools are safe but annoying to approve one-by-one. Offer to pre-approve curated bundles by writing to `~/.claude/settings.json` under `permissions.allow`.
 
@@ -200,10 +212,11 @@ Bash(gh auth status:*)
 Bash(gh --version)
 ```
 
-## 8. Report to the user
+## 9. Report to the user
 
 Tell the user:
 - Statusline has been configured (show the path used)
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
+- Auto-memory status (disabled, or left on)
 - Which permission bundles were applied (or that none were selected)
 - They may need to restart Claude Code for changes to take effect
