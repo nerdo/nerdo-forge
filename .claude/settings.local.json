@@ -8,7 +8,9 @@
       "Read(//Users/nerdo/personal/ai-settings/claudecode/agents/**)",
       "Read(//Users/nerdo/.claude/plugins/**)",
       "Skill(nerdo-forge:setup)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-init.sh)",
+      "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-prompt.sh)"
     ]
   }
 }
