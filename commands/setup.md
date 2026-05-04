@@ -144,7 +144,7 @@ If the user chose "No", skip to §9.
    **Description:** "All playwright MCP tools. Enables the ui-tester agent and browser automation."
 
 3. **Label:** "jj safe commands — currently <state>"
-   **Description:** "Read-only jj (status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
+   **Description:** "Read-only jj (root, status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
 
 4. **Label:** "Dev shell bundle — currently <state>"
    **Description:** "Read-only git, common test/build/lint scripts (bun/npm/pnpm), and harmless inspection commands (ls, cat, jq, etc.)."
@@ -193,14 +193,22 @@ mcp__playwright
 
 **Bundle: jj safe commands**
 ```
+Bash(jj root:*)
 Bash(jj status:*)
 Bash(jj st:*)
 Bash(jj diff:*)
 Bash(jj log:*)
 Bash(jj show:*)
+Bash(jj evolog:*)
+Bash(jj files:*)
 Bash(jj op log:*)
 Bash(jj operation log:*)
+Bash(jj op restore:*)
+Bash(jj operation restore:*)
+Bash(jj op revert:*)
+Bash(jj operation revert:*)
 Bash(jj bookmark list:*)
+Bash(jj workspace list:*)
 Bash(jj describe:*)
 Bash(jj commit:*)
 Bash(jj new:*)

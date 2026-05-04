@@ -1,6 +1,6 @@
 {
   "name": "nerdo-forge",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
   "author": {
     "name": "nerdo"
@@ -13,12 +13,32 @@
     "engineering"
   ],
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pd-protocol-init.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pd-protocol-pre-compact.sh"
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/prime-directive-protocol.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pd-protocol-prompt.sh"
           }
         ]
       }

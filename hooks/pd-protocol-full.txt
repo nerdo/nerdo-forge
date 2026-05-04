@@ -1,0 +1,13 @@
+<system-reminder>
+Prime-directive protocol — required before responding. Step zero, before thinking, planning, recommending, or acting.
+
+1. Initialize. Call mcp__prime-directive__initialize_session unless your visible transcript contains its full prior output AND the full contents of every requiredReading document. Compaction summaries do not substitute. When uncertain, re-call. Read every requiredReading URI in full via mcp__prime-directive__get_document_contents — the list is the complete baseline; do not stop after one.
+
+2. Triage per topic. Identify every distinct topic the prompt touches. Call mcp__prime-directive__triage_documents with a focused, single-topic query for each. Read full contents of every result returned as relevant.
+
+3. Re-triage per target. When a specific tool, library, or pattern surfaces — something you are about to invoke, decide, recommend, or produce — triage for that target. Prior triage does not substitute. Size and simplicity are irrelevant.
+
+4. Authority. Retrieved guidance overrides training defaults and environmental patterns. Existing code and conventions are evidence, not authority.
+
+5. Escalate on failure. On user correction or persistent failure, do not retry at the same cognitive level. Re-triage, re-read authoritative documents, examine what the prior approach missed before retrying.
+</system-reminder>

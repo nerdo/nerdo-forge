@@ -120,9 +120,30 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 ### Release flow
 
 1. **Test locally first** (see "Verifying changes before push" above). Do not bump the version until every affected surface has been exercised.
-2. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
-3. Commit and push to the marketplace repo.
-4. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
+2. **Assess upgrade impact** (see "Per-release upgrade impact assessment" below). The commit message body MUST state the impact line: `Upgrade impact: <none | re-run setup | manual migration steps>`.
+3. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
+4. Commit and push to the marketplace repo.
+5. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
+
+### Per-release upgrade impact assessment
+
+Before every release, walk this checklist to confirm the standard "Installing an updated version" procedure leaves existing installations in a working state. State the result in the commit message body as `Upgrade impact: <one line>`.
+
+| Surface | Migration on uninstall + install | User action required |
+|---|---|---|
+| **Hooks** (declared in `plugin.json`) | Replaced wholesale | None — runs automatically. |
+| **Statusline** | Cache dir path becomes stale (the path in `~/.claude/settings.json` embeds the old version dir) | Re-run `/nerdo-forge:setup` to point at the new cache dir. |
+| **Permission bundles** | Reconciled idempotently by setup — added rules for ACTIVE bundles get applied; rules removed from a bundle get cleaned up | Re-run `/nerdo-forge:setup`. |
+| **Output styles** | Replaced wholesale | None. |
+| **Slash commands** | Replaced wholesale | None. |
+| **Agents** | Replaced wholesale | None — provided callers use prefixed names (`nerdo-forge:researcher`, not bare `researcher`). See Hazards. |
+
+If a release introduces state that lives **outside** these surfaces — a sentinel file the runtime depends on, a settings field outside what setup writes, a global directory created at runtime — the release is NOT covered by the standard procedure. Document the explicit migration steps as part of the assessment AND in the commit body.
+
+For releases that fall entirely within the table above:
+- If only `plugin.json`-declared surfaces changed (hooks, output styles, slash commands, agents) → `Upgrade impact: none`
+- If statusline path or permission bundles changed → `Upgrade impact: re-run setup`
+- If anything outside the table changed → `Upgrade impact: <explicit migration steps>`
 
 ### Installing an updated version (CONFIRMED PROCEDURE)
 
