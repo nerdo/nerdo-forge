@@ -94,7 +94,7 @@ The goal is an idempotent, symmetric operation: running setup repeatedly with th
 
 ### 8a. Inspect current state
 
-Read `~/.claude/settings.json` and, for each of the five bundles listed in §8d, compute the current state by exact-string comparison against `permissions.allow`:
+Read `~/.claude/settings.json` and, for each of the six bundles listed in §8d, compute the current state by exact-string comparison against `permissions.allow`:
 
 - **ON** — every rule in the bundle is present
 - **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
@@ -108,6 +108,7 @@ Display the result to the user verbatim before asking anything, for example:
 > - jj safe commands: PARTIAL (11/13)
 > - Dev shell bundle: OFF
 > - GitHub CLI (read-only): ON
+> - Transcript inspection: OFF
 
 ### 8b. Ask whether to change anything
 
@@ -129,7 +130,7 @@ If the user chose "No", skip to §9.
 
 ### 8c. Collect desired end state
 
-`AskUserQuestion` caps options at four per question, so split the five bundles into two questions. For every option, append the current state from §8a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
+`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §8a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
 
 **Question 1:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
 **Header:** "Bundles 1/2"
@@ -149,21 +150,21 @@ If the user chose "No", skip to §9.
 4. **Label:** "Dev shell bundle — currently <state>"
    **Description:** "Read-only git, common test/build/lint scripts (bun/npm/pnpm), and harmless inspection commands (ls, cat, jq, etc.)."
 
-**Question 2:** "Should the GitHub CLI (read-only) bundle be ACTIVE at the end? Currently `<state>`."
+**Question 2:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
 **Header:** "Bundles 2/2"
-**multiSelect:** false
+**multiSelect:** true
 
-**Options:**
+**Options** (append the live state string to each label):
 
-1. **Label:** "Active — keep or add gh read-only rules"
-   **Description:** "Ensures every rule from the GitHub CLI bundle is present in `permissions.allow`."
+1. **Label:** "GitHub CLI (read-only) — currently <state>"
+   **Description:** "Read-only `gh` subcommands (pr/issue/release/repo/run/workflow/search view + list, auth status). No write operations."
 
-2. **Label:** "Inactive — remove gh read-only rules"
-   **Description:** "Removes every rule from the GitHub CLI bundle from `permissions.allow`."
+2. **Label:** "Transcript inspection — currently <state>"
+   **Description:** "Read access to `~/.claude/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
 
 ### 8d. Apply the desired end state
 
-For each of the five bundles, using the exact rule lists below:
+For each of the six bundles, using the exact rule lists below:
 
 - **Selected (ACTIVE):** ensure every rule string is present in `permissions.allow`. Add missing rules at the end of the array. Do not duplicate.
 - **Unselected (INACTIVE):** remove every rule string in the bundle from `permissions.allow` by exact match.
@@ -277,6 +278,11 @@ Bash(gh auth status:*)
 Bash(gh --version)
 ```
 
+**Bundle: Transcript inspection**
+```
+Read(~/.claude/projects/**)
+```
+
 ## 9. Report to the user
 
 Tell the user:
@@ -284,5 +290,5 @@ Tell the user:
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
 - Auto-memory status (disabled, or left on)
 - Obsolete MCP init directive status (removed from `~/.claude/CLAUDE.md`, or no directive was present)
-- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §8b, say so. Otherwise, for each of the five bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
+- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §8b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
 - They may need to restart Claude Code for changes to take effect
