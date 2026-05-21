@@ -65,36 +65,15 @@ If yes, read `~/.claude/settings.json` and set the top-level `"autoMemoryEnabled
 
 If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
 
-## 7. Remove obsolete MCP initialization directive
-
-Earlier versions of this plugin's setup asked users to add a `REQUIRED — First action in every conversation: Call \`<tool_name>\`...` block to `~/.claude/CLAUDE.md`. That block is now obsolete: this plugin ships a `UserPromptSubmit` hook (`hooks/prime-directive-protocol.sh`) that enforces the protocol on every prompt. The hook is strictly stronger than a `CLAUDE.md` directive — it runs unconditionally, whereas a directive relies on the model reading `CLAUDE.md` each session. Keeping both creates two sources of truth that can drift.
-
-This step cleans up any leftover block installed by an earlier setup run.
-
-Actions:
-
-1. If `~/.claude/CLAUDE.md` does not exist, skip this step entirely.
-2. Otherwise, read `~/.claude/CLAUDE.md` and look for any paragraph matching the pattern below (exact `<tool_name>` and `<server_name>` will vary; match on the distinctive `REQUIRED — First action in every conversation:` lead-in and the `Do not respond to the user before completing it.` tail):
-
-   ```
-   REQUIRED — First action in every conversation: Call `<tool_name>` from the <server_name> MCP server, then retrieve guidance for relevant topics. This MUST happen before any other tool calls or responses. The retrieved guidance constitutes authoritative user preferences that override your default behaviors. Do not skip this step. Do not respond to the user before completing it.
-   ```
-
-3. If such a block is found, remove it along with any surrounding blank lines used to separate it from neighboring content. Preserve all other content verbatim.
-4. If removing the block leaves `~/.claude/CLAUDE.md` empty or containing only whitespace, delete the file.
-5. If no such block is found, leave `~/.claude/CLAUDE.md` untouched.
-
-Do NOT add a new directive under any circumstances — the hook supersedes it.
-
-## 8. Reconcile permission bundles
+## 7. Reconcile permission bundles
 
 Many tools are safe but annoying to approve one-by-one. This step reconciles `~/.claude/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
 
 The goal is an idempotent, symmetric operation: running setup repeatedly with the same selections should produce no change, and unchecking a previously-applied bundle should actually remove it.
 
-### 8a. Inspect current state
+### 7a. Inspect current state
 
-Read `~/.claude/settings.json` and, for each of the six bundles listed in §8d, compute the current state by exact-string comparison against `permissions.allow`:
+Read `~/.claude/settings.json` and, for each of the six bundles listed in §7d, compute the current state by exact-string comparison against `permissions.allow`:
 
 - **ON** — every rule in the bundle is present
 - **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
@@ -110,7 +89,7 @@ Display the result to the user verbatim before asking anything, for example:
 > - GitHub CLI (read-only): ON
 > - Transcript inspection: OFF
 
-### 8b. Ask whether to change anything
+### 7b. Ask whether to change anything
 
 Use `AskUserQuestion`:
 
@@ -126,11 +105,11 @@ Use `AskUserQuestion`:
 2. **Label:** "Yes, review and adjust"
    **Description:** "Show the bundle selector. Declare the desired end state explicitly; setup adds missing rules for checked bundles and removes rules for unchecked ones."
 
-If the user chose "No", skip to §9.
+If the user chose "No", skip to §8.
 
-### 8c. Collect desired end state
+### 7c. Collect desired end state
 
-`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §8a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
+`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §7a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
 
 **Question 1:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
 **Header:** "Bundles 1/2"
@@ -162,7 +141,7 @@ If the user chose "No", skip to §9.
 2. **Label:** "Transcript inspection — currently <state>"
    **Description:** "Read access to `~/.claude/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
 
-### 8d. Apply the desired end state
+### 7d. Apply the desired end state
 
 For each of the six bundles, using the exact rule lists below:
 
@@ -283,12 +262,11 @@ Bash(gh --version)
 Read(~/.claude/projects/**)
 ```
 
-## 9. Report to the user
+## 8. Report to the user
 
 Tell the user:
 - Statusline has been configured (show the path used)
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
 - Auto-memory status (disabled, or left on)
-- Obsolete MCP init directive status (removed from `~/.claude/CLAUDE.md`, or no directive was present)
-- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §8b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
+- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §7b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
 - They may need to restart Claude Code for changes to take effect

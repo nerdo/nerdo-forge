@@ -4,7 +4,7 @@ This file governs how Claude Code should behave when editing this plugin. For us
 
 ## Plugin purpose
 
-nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), session hooks (`hooks/`), and a setup skill. Agents here are spawned as subagents by the user's main Claude Code session.
+nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), and a setup skill. Agents here are spawned as subagents by the user's main Claude Code session.
 
 ## Agent authoring conventions
 
@@ -109,7 +109,6 @@ Invoke plugin agents by their prefixed name during testing: `nerdo-forge:researc
 
 Every change must be exercised locally before the release flow. Use `--plugin-dir` (above), then touch every surface the change affects:
 
-- **Hooks** — trigger the event and confirm the injected output reaches the host model. `UserPromptSubmit` fires on every prompt; other types (`SessionStart`, `PreToolUse`, `PostToolUse`, etc.) fire on their own triggers. Run the session with `claude --debug hooks --plugin-dir .` to watch hook execution live. For output-injecting hooks, ask the model to quote or reference the injected text — confirms the content arrived, not just that the script ran.
 - **Agents** — invoke by prefixed name (`nerdo-forge:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
 - **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
@@ -131,7 +130,6 @@ Before every release, walk this checklist to confirm the standard "Installing an
 
 | Surface | Migration on uninstall + install | User action required |
 |---|---|---|
-| **Hooks** (declared in `plugin.json`) | Replaced wholesale | None — runs automatically. |
 | **Statusline** | Cache dir path becomes stale (the path in `~/.claude/settings.json` embeds the old version dir) | Re-run `/nerdo-forge:setup` to point at the new cache dir. |
 | **Permission bundles** | Reconciled idempotently by setup — added rules for ACTIVE bundles get applied; rules removed from a bundle get cleaned up | Re-run `/nerdo-forge:setup`. |
 | **Output styles** | Replaced wholesale | None. |
@@ -141,7 +139,7 @@ Before every release, walk this checklist to confirm the standard "Installing an
 If a release introduces state that lives **outside** these surfaces — a sentinel file the runtime depends on, a settings field outside what setup writes, a global directory created at runtime — the release is NOT covered by the standard procedure. Document the explicit migration steps as part of the assessment AND in the commit body.
 
 For releases that fall entirely within the table above:
-- If only `plugin.json`-declared surfaces changed (hooks, output styles, slash commands, agents) → `Upgrade impact: none`
+- If only `plugin.json`-declared surfaces changed (output styles, slash commands, agents) → `Upgrade impact: none`
 - If statusline path or permission bundles changed → `Upgrade impact: re-run setup`
 - If anything outside the table changed → `Upgrade impact: <explicit migration steps>`
 
