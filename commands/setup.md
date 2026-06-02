@@ -8,9 +8,37 @@ user-invocable: true
 
 You are setting up the nerdo-forge plugin. Perform these steps:
 
+## 0. Resolve the Claude config directory
+
+Do NOT assume the Claude config directory is `~/.claude`. Claude Code honors the `CLAUDE_CONFIG_DIR` environment variable, and this user may have it set to a non-default location. Resolve it once, up front, and use the resolved value everywhere below.
+
+Run this Bash command to compute both the config directory and the global config file path:
+
+```bash
+if [ -n "$CLAUDE_CONFIG_DIR" ]; then
+  printf 'config_dir=%s\n' "$CLAUDE_CONFIG_DIR"
+  printf 'config_json=%s/.claude.json\n' "$CLAUDE_CONFIG_DIR"
+else
+  printf 'config_dir=%s/.claude\n' "$HOME"
+  printf 'config_json=%s/.claude.json\n' "$HOME"
+fi
+```
+
+Note the asymmetry the snippet handles for you:
+
+- When `CLAUDE_CONFIG_DIR` is **set**, the directory is `$CLAUDE_CONFIG_DIR` and the global config file lives *inside* it at `$CLAUDE_CONFIG_DIR/.claude.json`.
+- When it is **unset**, the directory is `~/.claude` but the global config file is its *sibling* at `~/.claude.json`.
+
+Store the two resolved, absolute paths:
+
+- `<config_dir>` — the config directory (`settings.json`, `projects/`, `plugins/` all live here)
+- `<config_json>` — the global config file (used in step 3)
+
+Everywhere below that references `<config_dir>` or `<config_json>`, substitute the resolved absolute paths from this step. Never read or write a literal `~/.claude` path.
+
 ## 1. Locate the plugin
 
-The plugin root is the directory containing this command file's parent. Find the actual resolved path of the plugin installation by searching for `nerdo-forge` in `~/.claude/plugins/installed_plugins.json`. Extract the `installPath` value.
+The plugin root is the directory containing this command file's parent. Find the actual resolved path of the plugin installation by searching for `nerdo-forge` in `<config_dir>/plugins/installed_plugins.json`. Extract the `installPath` value.
 
 If not found in installed_plugins.json, check if the plugin is running from a local development path by looking for `.claude-plugin/plugin.json` in ancestor directories of this command file.
 
@@ -18,7 +46,7 @@ Store the resolved plugin root path for use below.
 
 ## 2. Update settings.json for statusline
 
-Read `~/.claude/settings.json`. Update or add the `statusLine` field:
+Read `<config_dir>/settings.json`. Update or add the `statusLine` field:
 
 ```json
 {
@@ -35,7 +63,7 @@ Preserve all existing settings. Only modify the `statusLine` field.
 
 ## 3. Enable verbose mode
 
-Read `~/.claude.json`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-forge context usage bar.
+Read `<config_json>`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-forge context usage bar.
 
 Preserve all existing data. Only modify the `verbose` field.
 
@@ -47,33 +75,33 @@ Verify the output style file exists at `<plugin_root>/output-styles/Disciplined 
 
 Ask the user:
 
-> The "Disciplined Engineering" output style is now available and can be selected anytime with `/output-style`. Would you like to set it as your **default** output style? (This writes to `~/.claude/settings.json` so it activates automatically on every new session.)
+> The "Disciplined Engineering" output style is now available and can be selected anytime with `/output-style`. Would you like to set it as your **default** output style? (This writes to `<config_dir>/settings.json` so it activates automatically on every new session.)
 
-If yes, add `"outputStyle": "Disciplined Engineering"` to `~/.claude/settings.json`, preserving all other settings.
+If yes, add `"outputStyle": "Disciplined Engineering"` to `<config_dir>/settings.json`, preserving all other settings.
 
 If no, skip this step.
 
 ## 6. Ask about disabling auto-memory
 
-Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `~/.claude/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. For users who rely on an authoritative source of guidance (e.g. the prime-directive MCP), auto-memory can drift from that source and introduce contradictions — a snapshot competing with a living document.
+Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `<config_dir>/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. For users who rely on an authoritative source of guidance (e.g. the prime-directive MCP), auto-memory can drift from that source and introduce contradictions — a snapshot competing with a living document.
 
 Ask the user:
 
-> Claude Code's auto-memory writes notes to `~/.claude/projects/<project>/memory/` based on your corrections. If you maintain authoritative guidance elsewhere (e.g. a prime-directive MCP), auto-memory can drift from it and cause contradictions. Would you like to **disable auto-memory**? (This writes `"autoMemoryEnabled": false` to `~/.claude/settings.json`. Existing memory files are left alone — you can archive or delete them separately.)
+> Claude Code's auto-memory writes notes to `<config_dir>/projects/<project>/memory/` based on your corrections. If you maintain authoritative guidance elsewhere (e.g. a prime-directive MCP), auto-memory can drift from it and cause contradictions. Would you like to **disable auto-memory**? (This writes `"autoMemoryEnabled": false` to `<config_dir>/settings.json`. Existing memory files are left alone — you can archive or delete them separately.)
 
-If yes, read `~/.claude/settings.json` and set the top-level `"autoMemoryEnabled"` field to `false`. Preserve all other settings.
+If yes, read `<config_dir>/settings.json` and set the top-level `"autoMemoryEnabled"` field to `false`. Preserve all other settings.
 
 If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
 
 ## 7. Reconcile permission bundles
 
-Many tools are safe but annoying to approve one-by-one. This step reconciles `~/.claude/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
+Many tools are safe but annoying to approve one-by-one. This step reconciles `<config_dir>/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
 
 The goal is an idempotent, symmetric operation: running setup repeatedly with the same selections should produce no change, and unchecking a previously-applied bundle should actually remove it.
 
 ### 7a. Inspect current state
 
-Read `~/.claude/settings.json` and, for each of the six bundles listed in §7d, compute the current state by exact-string comparison against `permissions.allow`:
+Read `<config_dir>/settings.json` and, for each of the six bundles listed in §7d, compute the current state by exact-string comparison against `permissions.allow`:
 
 - **ON** — every rule in the bundle is present
 - **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
@@ -139,7 +167,7 @@ If the user chose "No", skip to §8.
    **Description:** "Read-only `gh` subcommands (pr/issue/release/repo/run/workflow/search view + list, auth status). No write operations."
 
 2. **Label:** "Transcript inspection — currently <state>"
-   **Description:** "Read access to `~/.claude/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
+   **Description:** "Read access to `<config_dir>/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
 
 ### 7d. Apply the desired end state
 
@@ -259,8 +287,10 @@ Bash(gh --version)
 
 **Bundle: Transcript inspection**
 ```
-Read(~/.claude/projects/**)
+Read(<config_dir>/projects/**)
 ```
+
+This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §7d, compare against this substituted form — not the literal `<config_dir>` placeholder.
 
 ## 8. Report to the user
 

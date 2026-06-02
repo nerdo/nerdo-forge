@@ -25,9 +25,10 @@ The concepts below are the principle. The substrates differ based on what is ava
 **If prime-directive MCP is unavailable**, apply the same principle via fallback substrates:
 
 - Read `CLAUDE.md` in cwd and ancestor directories.
-- List skills under `~/.claude/skills/` and plugin caches (`~/.claude/plugins/**`); read any whose name or description matches your task.
+- Resolve the Claude config directory first: use `$CLAUDE_CONFIG_DIR` if that env var is set, otherwise default to `~/.claude`. Do not assume `~/.claude`.
+- List skills under `<config_dir>/skills/` and plugin caches (`<config_dir>/plugins/**`); read any whose name or description matches your task.
 - Check project-level guidance: `README.md`, `docs/`, `.claude/`.
-- Check auto-memory: `~/.claude/projects/**/memory/MEMORY.md`.
+- Check auto-memory: `<config_dir>/projects/**/memory/MEMORY.md`.
 
 **If neither is available**, note the absence in your final report, proceed best-effort, and flag that guidance was unavailable.
 

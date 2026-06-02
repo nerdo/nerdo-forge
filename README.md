@@ -47,7 +47,7 @@ After installing, run:
 ```
 
 This will:
-1. Configure `~/.claude/settings.json` to use the statusline
+1. Configure your Claude config directory's `settings.json` (honoring `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude`) to use the statusline
 2. Ask whether to set Disciplined Engineering as your default output style
 3. Confirm everything is wired up
 
