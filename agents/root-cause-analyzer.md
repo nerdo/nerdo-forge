@@ -15,12 +15,12 @@ The concepts below are the principle. The substrates differ based on what is ava
 
 ### 1. Load authoritative guidance
 
-**If `mcp__prime-directive__*` tools are available** (preferred path):
+**If the prime-directive MCP server is available** (preferred path):
 
-- Call `mcp__prime-directive__initialize_session`.
-- Read every URI in `requiredReading` via `mcp__prime-directive__get_document_contents`.
-- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If `initialize_session` surfaces other indexes, read them too.
-- **Per-concern triage**: for each distinct concern your task touches, call `mcp__prime-directive__triage_documents` with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
+- Initialize the session via the server's session-initialization tool (`initialize_session`).
+- Read every URI in `requiredReading` via the server's document-retrieval tool (`get_document_contents`).
+- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If session initialization surfaces other indexes, read them too.
+- **Per-concern triage**: for each distinct concern your task touches, call the server's triage tool (`triage_documents`) with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
 
 **If prime-directive MCP is unavailable**, apply the same principle via fallback substrates:
 
@@ -47,7 +47,7 @@ If loaded guidance diverges from what you observe in the environment, surface it
 
 ### 4. Cognitive escalation on failure
 
-On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use thinking tools (preferred: `mcp__clear-thought__clear_thought` with `metacognitivemonitoring`; manual written decomposition if unavailable) to examine what went wrong before reattempting.
+On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use a structured metacognition tool (such as the clear-thought server's `metacognitivemonitoring` mode; manual written decomposition if none is available) to examine what went wrong before reattempting.
 
 ### Default concerns for this agent
 

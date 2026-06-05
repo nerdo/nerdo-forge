@@ -83,11 +83,11 @@ If no, skip this step.
 
 ## 6. Ask about disabling auto-memory
 
-Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `<config_dir>/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. For users who rely on an authoritative source of guidance (e.g. the prime-directive MCP), auto-memory can drift from that source and introduce contradictions — a snapshot competing with a living document.
+Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `<config_dir>/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. Disabling it is an optional personal preference.
 
 Ask the user:
 
-> Claude Code's auto-memory writes notes to `<config_dir>/projects/<project>/memory/` based on your corrections. If you maintain authoritative guidance elsewhere (e.g. a prime-directive MCP), auto-memory can drift from it and cause contradictions. Would you like to **disable auto-memory**? (This writes `"autoMemoryEnabled": false` to `<config_dir>/settings.json`. Existing memory files are left alone — you can archive or delete them separately.)
+> Would you like to **disable auto-memory**? Claude Code writes notes to `<config_dir>/projects/<project>/memory/` based on your corrections; disabling stops that. (This writes `"autoMemoryEnabled": false` to `<config_dir>/settings.json`. Existing memory files are left alone — you can archive or delete them separately.)
 
 If yes, read `<config_dir>/settings.json` and set the top-level `"autoMemoryEnabled"` field to `false`. Preserve all other settings.
 
@@ -146,10 +146,10 @@ If the user chose "No", skip to §8.
 **Options** (append the live state string to each label):
 
 1. **Label:** "Essentials (Recommended) — currently <state>"
-   **Description:** "prime-directive, precision-math, context7 MCP tools; WebSearch; WebFetch for any site."
+   **Description:** "The nerdo-forge-bundled MCP servers (context7, precision-math, clear-thought, json-emitter, excel); WebSearch; WebFetch for any site."
 
 2. **Label:** "Browser testing — currently <state>"
-   **Description:** "All playwright MCP tools. Enables the ui-tester agent and browser automation."
+   **Description:** "All tools on the nerdo-forge-bundled playwright MCP server. Enables the ui-tester agent and browser automation."
 
 3. **Label:** "jj safe commands — currently <state>"
    **Description:** "Read-only jj (root, status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
@@ -180,23 +180,27 @@ If a rule string appears in more than one bundle and at least one of those bundl
 
 Rules in `permissions.allow` that are not listed in any bundle are preserved exactly as they are.
 
-**MCP entry form:** Use the server-level string (e.g. `mcp__prime-directive`) exactly as listed — do NOT expand to the tool-wildcard form (`mcp__prime-directive__*`). The server-level entry already covers all tools on that server; adding both is duplicative.
+**MCP entry form:** Use the server-level string exactly as listed — do NOT expand to the tool-wildcard form (`...__*`). The server-level entry already covers all tools on that server; adding both is duplicative.
+
+**Plugin-bundled vs user/project-scope naming (CRITICAL):** a server bundled *by a plugin* is namespaced with a `plugin_<plugin-name>_` infix, so its server-level string is `mcp__plugin_nerdo-forge_<server>` (e.g. `mcp__plugin_nerdo-forge_playwright`) — NOT the bare `mcp__playwright`. A bare `mcp__<server>` matches only a server registered at user or project scope. Since nerdo-forge now ships these servers itself, the rule lists below use the `mcp__plugin_nerdo-forge_*` form for them. Servers provided at user/project scope or by *other* plugins are not nerdo-forge's concern — this command does not add, manage, or remove their permissions.
 
 - **When ADDING:** if an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server being added, replace it with the server-level form rather than keeping both.
 - **When REMOVING:** remove only the exact bundle rule string (the server-level form). Leave any wildcard or user-specific variant alone so the user can clean it up manually if they choose.
 
 **Bundle: Essentials**
 ```
-mcp__prime-directive
-mcp__precision-math
-mcp__context7
+mcp__plugin_nerdo-forge_context7
+mcp__plugin_nerdo-forge_precision-math
+mcp__plugin_nerdo-forge_clear-thought
+mcp__plugin_nerdo-forge_json-emitter
+mcp__plugin_nerdo-forge_excel
 WebSearch
 WebFetch
 ```
 
 **Bundle: Browser testing**
 ```
-mcp__playwright
+mcp__plugin_nerdo-forge_playwright
 ```
 
 **Bundle: jj safe commands**
@@ -292,6 +296,31 @@ Read(<config_dir>/projects/**)
 
 This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §7d, compare against this substituted form — not the literal `<config_dir>` placeholder.
 
+### 7e. Migrate superseded MCP permission strings
+
+Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-forge now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-forge_` infix), so they are dead weight. Because they are no longer listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind as strays.
+
+Whenever the user chose "Yes, review and adjust" in §7b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
+
+```
+mcp__context7
+mcp__context7__*
+mcp__precision-math
+mcp__precision-math__*
+mcp__clear-thought
+mcp__clear-thought__*
+mcp__json-emitter
+mcp__json-emitter__*
+mcp__excel
+mcp__excel__*
+mcp__playwright
+mcp__playwright__*
+```
+
+Do NOT remove anything outside the list above. The list is exhaustive for nerdo-forge's own bundled servers; leave every other `permissions.allow` entry — user/project-scope servers and servers provided by *other* plugins — untouched.
+
+Caveat to surface if any of these were present and removed: this also drops permissions for any *user/project-scope* server of the same name. That is intended — nerdo-forge now provides these servers, and the dedup step (`claude mcp remove -s user <name>`) removes those user-scope copies. If you deliberately keep a user-scope copy of one of these and want it allowed, re-add its grant after setup.
+
 ## 8. Report to the user
 
 Tell the user:
@@ -299,4 +328,5 @@ Tell the user:
 - "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
 - Auto-memory status (disabled, or left on)
 - Permission bundle reconciliation result. If the user chose "No, leave as-is" in §7b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
+- Superseded-string migration (§7e): if any bare/wildcard legacy MCP strings were removed, list them; otherwise say there were none.
 - They may need to restart Claude Code for changes to take effect

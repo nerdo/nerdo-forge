@@ -4,7 +4,13 @@ This file governs how Claude Code should behave when editing this plugin. For us
 
 ## Plugin purpose
 
-nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), and a setup skill. Agents here are spawned as subagents by the user's main Claude Code session.
+nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), a setup skill, and a default set of MCP servers (declared inline in `.claude-plugin/plugin.json` under `mcpServers`). Agents here are spawned as subagents by the user's main Claude Code session.
+
+### Bundled MCP servers
+
+The plugin declares six MCP servers inline in `.claude-plugin/plugin.json` so they are offered (with the standard per-server approval prompt) when the plugin is installed: `context7`, `clear-thought`, `json-emitter`, `precision-math`, and `excel` run directly via `bunx`/`uvx`; `playwright` runs through the bundled `scripts/launch-playwright-mcp.ts` launcher (referenced via `${CLAUDE_PLUGIN_ROOT}`), which selects a browser in order — `PLAYWRIGHT_CHROME_PATH`, then a PATH scan, each validated by a quick headless smoke launch — and otherwise hands off to Playwright's bundled browser. See the launcher's header comment for the full resolution logic. `prime-directive` is intentionally NOT bundled here — it ships from its own plugin.
+
+Runtime prerequisites on the host `PATH`: `bun`/`bunx` for five of the servers and the Playwright launcher, plus Python's `uv`/`uvx` for `excel`. Edits to `plugin.json`'s `mcpServers` (or the launcher script) require `/reload-plugins` or a restart to take effect.
 
 ## Agent authoring conventions
 
@@ -27,12 +33,12 @@ The concepts below are the principle. The substrates differ based on what is ava
 
 ### 1. Load authoritative guidance
 
-**If `mcp__prime-directive__*` tools are available** (preferred path):
+**If the prime-directive MCP server is available** (preferred path):
 
-- Call `mcp__prime-directive__initialize_session`.
-- Read every URI in `requiredReading` via `mcp__prime-directive__get_document_contents`.
-- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If `initialize_session` surfaces other indexes, read them too.
-- **Per-concern triage**: for each distinct concern your task touches, call `mcp__prime-directive__triage_documents` with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
+- Initialize the session via the server's session-initialization tool (`initialize_session`).
+- Read every URI in `requiredReading` via the server's document-retrieval tool (`get_document_contents`).
+- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If session initialization surfaces other indexes, read them too.
+- **Per-concern triage**: for each distinct concern your task touches, call the server's triage tool (`triage_documents`) with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
 
 **If prime-directive MCP is unavailable**, apply the same principle via fallback substrates:
 
@@ -59,7 +65,7 @@ If loaded guidance diverges from what you observe in the environment, surface it
 
 ### 4. Cognitive escalation on failure
 
-On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use thinking tools (preferred: `mcp__clear-thought__clear_thought` with `metacognitivemonitoring`; manual written decomposition if unavailable) to examine what went wrong before reattempting.
+On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use a structured metacognition tool (such as the clear-thought server's `metacognitivemonitoring` mode; manual written decomposition if none is available) to examine what went wrong before reattempting.
 
 ### Default concerns for this agent
 
@@ -83,6 +89,7 @@ Pick 3–6 concerns that reflect the agent's role. Good defaults surface the gui
 - [ ] All three availability states handled: PD MCP present, fallback substrates, neither.
 - [ ] Per-tool orientation rule is inline (not just per-concern triage).
 - [ ] Cognitive escalation rule is inline.
+- [ ] No capability is pinned to a literal `mcp__<server>__<tool>` identifier — tools are referenced by capability (see "Reference tools by capability, not by exact MCP name").
 - [ ] If superseding an existing weaker bootstrap (e.g., a one-liner), the old version is fully removed.
 
 ## When to add a skill vs. an agent
@@ -91,6 +98,16 @@ Pick 3–6 concerns that reflect the agent's role. Good defaults surface the gui
 - **Agent** = a cognitive role. Spawned by the host model for delegated work that needs its own context window. Use for token-heavy or specialized reasoning (research, root-cause analysis, UI testing).
 
 If in doubt: if the user would ever invoke it directly, it is a skill. If the model decides when to spawn it, it is an agent.
+
+## Reference tools by capability, not by exact MCP name
+
+Guidance in this plugin — agent prompts, the bootstrap block, slash commands, this file — MUST NOT pin a *capability* to a literal `mcp__<server>__<tool>` identifier. Those identifiers break silently when a server is renamed or namespaced, and a STOP-trigger or instruction whose remediation depends on a literal tool-name string just stops firing. The reader is an LLM that resolves the concrete tool at runtime from a capability description; let it.
+
+- **Lead with the capability or role**, not the wire name: "use your precision-math calculation tool", "fetch docs via a library-documentation MCP server (such as context7)", "the prime-directive server's session-initialization tool (`initialize_session`)".
+- If a concrete identifier genuinely aids comprehension, include it **once** as an explicitly illustrative example (`such as …`, `e.g. …`) — never phrased as an exact-match requirement, and never as the thing a rule keys on.
+- **The one exception is a literal match that the harness itself requires.** Permission rules in `commands/setup.md` (e.g. `mcp__plugin_nerdo-forge_playwright`, `mcp__plugin_nerdo-forge_context7`) MUST stay exact, because Claude Code matches `permissions.allow` entries by string. Note the `plugin_nerdo-forge_` infix: a server bundled by this plugin surfaces as `mcp__plugin_<plugin-name>_<server>__<tool>`, NOT the bare `mcp__<server>` — so the permission strings carry that infix. Those are configuration, not guidance — keep them verbatim.
+
+When you add or edit any agent/command/doc, scan for `mcp__` and apply this rule; the only hits left should be the permission-rule strings in `commands/setup.md`.
 
 ## Distribution & local development
 
@@ -116,6 +133,7 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 - **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
 - **Output styles** — switch via `/output-style` and confirm formatting.
+- **MCP servers** — after `/reload-plugins` (or restart), run `/mcp` to confirm the bundled servers are listed, approve them, and call one cheap tool (e.g. `precision-math` `calculate`) to confirm a server responds. For `playwright`, confirm a `browser_*` tool works (the launcher prints to stderr which browser it picked — env/PATH executable or the bundled hand-off; set `PLAYWRIGHT_CHROME_PATH` to force a specific one). Run `bun test scripts/launch-playwright-mcp.test.ts` for the launcher's resolution logic.
 
 `/reload-plugins` picks up edits mid-session; no need to restart between iterations.
 
@@ -138,13 +156,16 @@ Before every release, walk this checklist to confirm the standard "Installing an
 | **Output styles** | Replaced wholesale | None. |
 | **Slash commands** | Replaced wholesale | None. |
 | **Agents** | Replaced wholesale | None — provided callers use prefixed names (`nerdo-forge:researcher`, not bare `researcher`). See Hazards. |
+| **MCP servers** | Replaced wholesale (declared inline in `plugin.json`; `${CLAUDE_PLUGIN_ROOT}` re-resolves to the new version dir automatically) | None on a normal update. On **first** install of a version that bundles a server the user also registered at user scope, that name now exists twice — remove the user-scope copy with `claude mcp remove -s user <name>`. New servers prompt the standard per-server approval. |
 
 If a release introduces state that lives **outside** these surfaces — a sentinel file the runtime depends on, a settings field outside what setup writes, a global directory created at runtime — the release is NOT covered by the standard procedure. Document the explicit migration steps as part of the assessment AND in the commit body.
 
 For releases that fall entirely within the table above:
-- If only `plugin.json`-declared surfaces changed (output styles, slash commands, agents) → `Upgrade impact: none`
+- If only `plugin.json`-declared surfaces changed (output styles, slash commands, agents, MCP servers) → `Upgrade impact: none`
 - If statusline path or permission bundles changed → `Upgrade impact: re-run setup`
 - If anything outside the table changed → `Upgrade impact: <explicit migration steps>`
+
+The release that first introduces a bundled MCP server is a special case: it is `plugin.json`-declared (so updates after it are `none`), but the first install collides with any user-scope copy of the same server name. State `Upgrade impact: manual migration steps` and spell out the `claude mcp remove -s user <name>` dedup in the commit body.
 
 ### Installing an updated version (CONFIRMED PROCEDURE)
 

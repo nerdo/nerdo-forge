@@ -1,6 +1,6 @@
 {
   "name": "nerdo-forge",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
   "author": {
     "name": "nerdo"
@@ -11,5 +11,44 @@
     "jujutsu",
     "output-style",
     "engineering"
-  ]
+  ],
+  "mcpServers": {
+    "context7": {
+      "command": "bunx",
+      "args": [
+        "@upstash/context7-mcp"
+      ]
+    },
+    "clear-thought": {
+      "command": "bunx",
+      "args": [
+        "@waldzellai/clear-thought-onepointfive"
+      ]
+    },
+    "json-emitter": {
+      "command": "bunx",
+      "args": [
+        "@nerdo/json-emitter-mcp"
+      ]
+    },
+    "precision-math": {
+      "command": "bunx",
+      "args": [
+        "@nerdo/precision-math-mcp"
+      ]
+    },
+    "excel": {
+      "command": "uvx",
+      "args": [
+        "excel-mcp-server",
+        "stdio"
+      ]
+    },
+    "playwright": {
+      "command": "bun",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/launch-playwright-mcp.ts"
+      ]
+    }
+  }
 }

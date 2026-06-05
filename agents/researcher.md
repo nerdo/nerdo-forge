@@ -15,12 +15,12 @@ The concepts below are the principle. The substrates differ based on what is ava
 
 ### 1. Load authoritative guidance
 
-**If `mcp__prime-directive__*` tools are available** (preferred path):
+**If the prime-directive MCP server is available** (preferred path):
 
-- Call `mcp__prime-directive__initialize_session`.
-- Read every URI in `requiredReading` via `mcp__prime-directive__get_document_contents`.
-- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If `initialize_session` surfaces other indexes, read them too.
-- **Per-concern triage**: for each distinct concern your task touches, call `mcp__prime-directive__triage_documents` with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
+- Initialize the session via the server's session-initialization tool (`initialize_session`).
+- Read every URI in `requiredReading` via the server's document-retrieval tool (`get_document_contents`).
+- Load indexes — they are second-order lookup mechanisms. At minimum: `prime-directive-mcp://skills/index.md` and `prime-directive-mcp://output-styles/index.md`. If session initialization surfaces other indexes, read them too.
+- **Per-concern triage**: for each distinct concern your task touches, call the server's triage tool (`triage_documents`) with a focused, single-topic query. Read full contents for every result above threshold. Your default concerns are listed at the end of this section — add task-specific ones on top.
 
 **If prime-directive MCP is unavailable**, apply the same principle via fallback substrates:
 
@@ -47,7 +47,7 @@ If loaded guidance diverges from what you observe in the environment, surface it
 
 ### 4. Cognitive escalation on failure
 
-On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use thinking tools (preferred: `mcp__clear-thought__clear_thought` with `metacognitivemonitoring`; manual written decomposition if unavailable) to examine what went wrong before reattempting.
+On user correction, persistent test failure, or repeated wrong output, do not retry at the same cognitive level. Use a structured metacognition tool (such as the clear-thought server's `metacognitivemonitoring` mode; manual written decomposition if none is available) to examine what went wrong before reattempting.
 
 ### Default concerns for this agent
 
@@ -73,10 +73,10 @@ You have been granted a rich toolbox — MCP servers, dedicated CLIs, and domain
 **Mandatory tool selection order — follow in this order:**
 
 1. **MCP tools** — If an MCP tool exists for the task, use it. Scan your available MCP servers before reaching for a shell. Examples:
-   - Parsing/querying JSON → `mcp__universal-json-agent__*` (load_json, jsonpath_query, filter_objects, pick_fields, etc.), NOT `python3 -c "import json..."` or `jq` pipelines you invent
-   - Mathematical calculation → `mcp__precision-math__calculate`, NOT mental math or inline `bc`/`python -c`
-   - Documentation lookups → `mcp__context7__*`, NOT speculative WebFetch
-   - Spreadsheet data → `mcp__excel__*`, NOT custom parsers
+   - Parsing/querying JSON → a JSON parsing/query MCP tool if one is available, NOT `python3 -c "import json..."` or `jq` pipelines you invent
+   - Mathematical calculation → your precision-math MCP tool (e.g. a `calculate` operation), NOT mental math or inline `bc`/`python -c`
+   - Documentation lookups → a library-documentation MCP server (such as context7), NOT speculative WebFetch
+   - Spreadsheet data → a spreadsheet MCP server (such as an Excel MCP), NOT custom parsers
 2. **Purpose-built CLIs already on the system** — `jq` for JSON when MCP unavailable, `rg` for search, `gh` for GitHub, `fd` for files, etc.
 3. **Built-in harness tools** — Grep, Glob, Read, WebFetch, WebSearch.
 4. **Ad-hoc scripts** — ONLY when the above cannot express the task, or for bulk transformations across many items where calling a tool per item would be wasteful. When you must write a script, state explicitly why no tool fit.
@@ -100,9 +100,9 @@ You DO NOT:
 
 ✅ **Allowed exploration**:
 - Reading code to identify patterns
-- Analyzing documentation for best practices (via `mcp__context7__*` when available)
+- Analyzing documentation for best practices (via a library-documentation MCP server such as context7, when available)
 - Running tests to understand current behavior
-- Querying structured data via MCP tools (`mcp__universal-json-agent__*`, `mcp__excel__*`, etc.)
+- Querying structured data via MCP tools (a JSON parsing/query tool, a spreadsheet/Excel MCP, etc.)
 - Searching codebases for pattern analysis (Grep, Glob, `rg`)
 - Using purpose-built CLIs (`jq`, `gh`, `rg`, etc.) when MCP equivalent is unavailable
 
@@ -114,9 +114,9 @@ You DO NOT:
 
 ❌ **Prohibited shortcuts** (see "Mandatory tool selection order" above):
 - Writing `python3 -c`, `node -e`, or similar inline scripts when an MCP tool or standard CLI handles the task
-- Reimplementing JSON parsing/querying in a shell one-liner instead of using `mcp__universal-json-agent__*` or `jq`
-- Performing math in a script instead of `mcp__precision-math__calculate`
-- Inventing scrapers/fetchers instead of using WebFetch or `mcp__context7__*`
+- Reimplementing JSON parsing/querying in a shell one-liner instead of using a JSON MCP tool or `jq`
+- Performing math in a script instead of your precision-math MCP tool
+- Inventing scrapers/fetchers instead of using WebFetch or a documentation MCP server such as context7
 
 ## Research Complete When:
 - [ ] All research objectives met
