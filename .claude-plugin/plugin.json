@@ -1,6 +1,6 @@
 {
   "name": "nerdo-forge",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
   "author": {
     "name": "nerdo"
@@ -44,10 +44,17 @@
         "stdio"
       ]
     },
-    "playwright": {
+    "playwright-headless": {
       "command": "bun",
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/scripts/launch-playwright-mcp.ts"
+      ]
+    },
+    "playwright-headed": {
+      "command": "bun",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/launch-playwright-mcp.ts",
+        "--headed"
       ]
     }
   }

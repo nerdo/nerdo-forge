@@ -24,6 +24,15 @@
 // Net effect: works out-of-the-box where a browser is available; on a machine
 // where the bundled browser is broken, set PLAYWRIGHT_CHROME_PATH to a working
 // Chrome/Chromium and it takes precedence.
+//
+// Headed vs headless: @playwright/mcp fixes the browser mode when the server
+// launches (there is no per-tool-call toggle), so the plugin registers this
+// launcher twice — once headless (default) and once with `--headed`. Pass
+// `--headed` as a script argument to drop the server's `--headless` flag and
+// show a visible browser window for collaborative, watch-along sessions. The
+// browser-selection smoke probe (below) always runs headless regardless: it is
+// a throwaway validation launch, and a visible window flashing during selection
+// would be noise.
 
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -151,30 +160,45 @@ async function realSmoke(executablePath: string): Promise<boolean> {
   }
 }
 
+/**
+ * Build the argv for spawning @playwright/mcp via `bun x`. `--headless` is
+ * included unless `headed` is set; the resolved executable path is appended only
+ * for a concrete selection (the bundled hand-off omits it). Pure, so the flag
+ * composition is unit-testable.
+ */
+export function buildMcpArgs(
+  bunPath: string,
+  selection: Selection,
+  options: { headed: boolean },
+): string[] {
+  const args = [bunPath, "x", "-y", "@playwright/mcp@latest", "--browser", "chromium"];
+  if (!options.headed) {
+    args.push("--headless");
+  }
+  if (selection.kind === "executable") {
+    args.push("--executable-path", selection.executablePath);
+  }
+  return args;
+}
+
 if (import.meta.main) {
+  const headed = process.argv.includes("--headed");
+
   const selection = await selectBrowser(planCandidates(process.env.PLAYWRIGHT_CHROME_PATH), {
     resolvePath: realResolvePath,
     smoke: realSmoke,
     warn: (message) => console.error(`playwright-mcp: ${message}`),
   });
 
-  const args = [
-    process.execPath,
-    "x",
-    "-y",
-    "@playwright/mcp@latest",
-    "--browser",
-    "chromium",
-    "--headless",
-    ...(selection.kind === "executable"
-      ? ["--executable-path", selection.executablePath]
-      : []),
-  ];
+  const args = buildMcpArgs(process.execPath, selection, { headed });
+  const mode = headed ? "headed" : "headless";
 
   if (selection.kind === "executable") {
-    console.error(`playwright-mcp: using browser at ${selection.executablePath}`);
+    console.error(`playwright-mcp: using browser at ${selection.executablePath} (${mode})`);
   } else {
-    console.error("playwright-mcp: no usable system browser found; using the bundled browser.");
+    console.error(
+      `playwright-mcp: no usable system browser found; using the bundled browser (${mode}).`,
+    );
   }
 
   // Reuse the bun that's running this script as `bunx` — never hardcode its path.

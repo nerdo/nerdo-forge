@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+  buildMcpArgs,
   planCandidates,
   selectBrowser,
   type Candidate,
   type SelectBrowserDeps,
+  type Selection,
 } from "./launch-playwright-mcp.ts";
 
 // Build deps with injected PATH/filesystem/smoke doubles.
@@ -105,5 +107,52 @@ describe("selectBrowser", () => {
     const deps = makeDeps({}, []);
     await selectBrowser([{ kind: "scan", name: "chromium" }, { kind: "bundled" }] as Candidate[], deps);
     expect(deps.warnings).toEqual([]);
+  });
+});
+
+describe("buildMcpArgs", () => {
+  const executable: Selection = { kind: "executable", executablePath: "/usr/bin/chromium" };
+  const bundled: Selection = { kind: "bundled" };
+
+  test("includes --headless by default (headed: false)", () => {
+    expect(buildMcpArgs("/bun", bundled, { headed: false })).toContain("--headless");
+  });
+
+  test("omits --headless when headed", () => {
+    expect(buildMcpArgs("/bun", bundled, { headed: true })).not.toContain("--headless");
+  });
+
+  test("appends --executable-path for a concrete selection", () => {
+    const args = buildMcpArgs("/bun", executable, { headed: false });
+    expect(args).toEqual([
+      "/bun",
+      "x",
+      "-y",
+      "@playwright/mcp@latest",
+      "--browser",
+      "chromium",
+      "--headless",
+      "--executable-path",
+      "/usr/bin/chromium",
+    ]);
+  });
+
+  test("omits --executable-path for the bundled hand-off", () => {
+    expect(buildMcpArgs("/bun", bundled, { headed: false })).not.toContain("--executable-path");
+  });
+
+  test("headed concrete selection: no --headless, keeps --executable-path", () => {
+    const args = buildMcpArgs("/bun", executable, { headed: true });
+    expect(args).not.toContain("--headless");
+    expect(args).toEqual([
+      "/bun",
+      "x",
+      "-y",
+      "@playwright/mcp@latest",
+      "--browser",
+      "chromium",
+      "--executable-path",
+      "/usr/bin/chromium",
+    ]);
   });
 });

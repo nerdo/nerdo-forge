@@ -149,7 +149,7 @@ If the user chose "No", skip to §8.
    **Description:** "The nerdo-forge-bundled MCP servers (context7, precision-math, clear-thought, json-emitter, excel); WebSearch; WebFetch for any site."
 
 2. **Label:** "Browser testing — currently <state>"
-   **Description:** "All tools on the nerdo-forge-bundled playwright MCP server. Enables the ui-tester agent and browser automation."
+   **Description:** "All tools on both nerdo-forge-bundled playwright MCP servers (headless for background runs, headed for watch-along sessions). Enables the ui-tester agent and browser automation."
 
 3. **Label:** "jj safe commands — currently <state>"
    **Description:** "Read-only jj (root, status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
@@ -182,7 +182,7 @@ Rules in `permissions.allow` that are not listed in any bundle are preserved exa
 
 **MCP entry form:** Use the server-level string exactly as listed — do NOT expand to the tool-wildcard form (`...__*`). The server-level entry already covers all tools on that server; adding both is duplicative.
 
-**Plugin-bundled vs user/project-scope naming (CRITICAL):** a server bundled *by a plugin* is namespaced with a `plugin_<plugin-name>_` infix, so its server-level string is `mcp__plugin_nerdo-forge_<server>` (e.g. `mcp__plugin_nerdo-forge_playwright`) — NOT the bare `mcp__playwright`. A bare `mcp__<server>` matches only a server registered at user or project scope. Since nerdo-forge now ships these servers itself, the rule lists below use the `mcp__plugin_nerdo-forge_*` form for them. Servers provided at user/project scope or by *other* plugins are not nerdo-forge's concern — this command does not add, manage, or remove their permissions.
+**Plugin-bundled vs user/project-scope naming (CRITICAL):** a server bundled *by a plugin* is namespaced with a `plugin_<plugin-name>_` infix, so its server-level string is `mcp__plugin_nerdo-forge_<server>` (e.g. `mcp__plugin_nerdo-forge_playwright-headless`) — NOT the bare `mcp__playwright-headless`. A bare `mcp__<server>` matches only a server registered at user or project scope. Since nerdo-forge now ships these servers itself, the rule lists below use the `mcp__plugin_nerdo-forge_*` form for them. Servers provided at user/project scope or by *other* plugins are not nerdo-forge's concern — this command does not add, manage, or remove their permissions.
 
 - **When ADDING:** if an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server being added, replace it with the server-level form rather than keeping both.
 - **When REMOVING:** remove only the exact bundle rule string (the server-level form). Leave any wildcard or user-specific variant alone so the user can clean it up manually if they choose.
@@ -200,7 +200,8 @@ WebFetch
 
 **Bundle: Browser testing**
 ```
-mcp__plugin_nerdo-forge_playwright
+mcp__plugin_nerdo-forge_playwright-headless
+mcp__plugin_nerdo-forge_playwright-headed
 ```
 
 **Bundle: jj safe commands**
@@ -298,7 +299,7 @@ This is the one bundle rule whose string is config-dir-dependent. Substitute `<c
 
 ### 7e. Migrate superseded MCP permission strings
 
-Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-forge now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-forge_` infix), so they are dead weight. Because they are no longer listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind as strays.
+Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-forge now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-forge_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-forge_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind.
 
 Whenever the user chose "Yes, review and adjust" in §7b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
 
@@ -315,6 +316,8 @@ mcp__excel
 mcp__excel__*
 mcp__playwright
 mcp__playwright__*
+mcp__plugin_nerdo-forge_playwright
+mcp__plugin_nerdo-forge_playwright__*
 ```
 
 Do NOT remove anything outside the list above. The list is exhaustive for nerdo-forge's own bundled servers; leave every other `permissions.allow` entry — user/project-scope servers and servers provided by *other* plugins — untouched.

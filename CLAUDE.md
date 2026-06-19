@@ -8,9 +8,9 @@ nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a
 
 ### Bundled MCP servers
 
-The plugin declares six MCP servers inline in `.claude-plugin/plugin.json` so they are offered (with the standard per-server approval prompt) when the plugin is installed: `context7`, `clear-thought`, `json-emitter`, `precision-math`, and `excel` run directly via `bunx`/`uvx`; `playwright` runs through the bundled `scripts/launch-playwright-mcp.ts` launcher (referenced via `${CLAUDE_PLUGIN_ROOT}`), which selects a browser in order — `PLAYWRIGHT_CHROME_PATH`, then a PATH scan, each validated by a quick headless smoke launch — and otherwise hands off to Playwright's bundled browser. See the launcher's header comment for the full resolution logic. `prime-directive` is intentionally NOT bundled here — it ships from its own plugin.
+The plugin declares seven MCP servers inline in `.claude-plugin/plugin.json` so they are offered (with the standard per-server approval prompt) when the plugin is installed: `context7`, `clear-thought`, `json-emitter`, `precision-math`, and `excel` run directly via `bunx`/`uvx`; `playwright-headless` and `playwright-headed` both run through the bundled `scripts/launch-playwright-mcp.ts` launcher (referenced via `${CLAUDE_PLUGIN_ROOT}`), which selects a browser in order — `PLAYWRIGHT_CHROME_PATH`, then a PATH scan, each validated by a quick headless smoke launch — and otherwise hands off to Playwright's bundled browser. See the launcher's header comment for the full resolution logic. The two playwright entries differ only by the launcher's `--headed` argument: Playwright fixes the browser mode at server launch (no per-call toggle), so a headless server (background) and a headed server (visible, watch-along) are registered separately and both available every session. `prime-directive` is intentionally NOT bundled here — it ships from its own plugin.
 
-Runtime prerequisites on the host `PATH`: `bun`/`bunx` for five of the servers and the Playwright launcher, plus Python's `uv`/`uvx` for `excel`. Edits to `plugin.json`'s `mcpServers` (or the launcher script) require `/reload-plugins` or a restart to take effect.
+Runtime prerequisites on the host `PATH`: `bun`/`bunx` for the four `bunx` servers and the two Playwright launchers (both run via `bun`), plus Python's `uv`/`uvx` for `excel`. Edits to `plugin.json`'s `mcpServers` (or the launcher script) require `/reload-plugins` or a restart to take effect.
 
 ## Agent authoring conventions
 
@@ -105,7 +105,7 @@ Guidance in this plugin — agent prompts, the bootstrap block, slash commands, 
 
 - **Lead with the capability or role**, not the wire name: "use your precision-math calculation tool", "fetch docs via a library-documentation MCP server (such as context7)", "the prime-directive server's session-initialization tool (`initialize_session`)".
 - If a concrete identifier genuinely aids comprehension, include it **once** as an explicitly illustrative example (`such as …`, `e.g. …`) — never phrased as an exact-match requirement, and never as the thing a rule keys on.
-- **The one exception is a literal match that the harness itself requires.** Permission rules in `commands/setup.md` (e.g. `mcp__plugin_nerdo-forge_playwright`, `mcp__plugin_nerdo-forge_context7`) MUST stay exact, because Claude Code matches `permissions.allow` entries by string. Note the `plugin_nerdo-forge_` infix: a server bundled by this plugin surfaces as `mcp__plugin_<plugin-name>_<server>__<tool>`, NOT the bare `mcp__<server>` — so the permission strings carry that infix. Those are configuration, not guidance — keep them verbatim.
+- **The one exception is a literal match that the harness itself requires.** Permission rules in `commands/setup.md` (e.g. `mcp__plugin_nerdo-forge_playwright-headed`, `mcp__plugin_nerdo-forge_context7`) MUST stay exact, because Claude Code matches `permissions.allow` entries by string. Note the `plugin_nerdo-forge_` infix: a server bundled by this plugin surfaces as `mcp__plugin_<plugin-name>_<server>__<tool>`, NOT the bare `mcp__<server>` — so the permission strings carry that infix. Those are configuration, not guidance — keep them verbatim.
 
 When you add or edit any agent/command/doc, scan for `mcp__` and apply this rule; the only hits left should be the permission-rule strings in `commands/setup.md`.
 
@@ -133,7 +133,7 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 - **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
 - **Output styles** — switch via `/output-style` and confirm formatting.
-- **MCP servers** — after `/reload-plugins` (or restart), run `/mcp` to confirm the bundled servers are listed, approve them, and call one cheap tool (e.g. `precision-math` `calculate`) to confirm a server responds. For `playwright`, confirm a `browser_*` tool works (the launcher prints to stderr which browser it picked — env/PATH executable or the bundled hand-off; set `PLAYWRIGHT_CHROME_PATH` to force a specific one). Run `bun test scripts/launch-playwright-mcp.test.ts` for the launcher's resolution logic.
+- **MCP servers** — after `/reload-plugins` (or restart), run `/mcp` to confirm the bundled servers are listed, approve them, and call one cheap tool (e.g. `precision-math` `calculate`) to confirm a server responds. For the playwright servers, confirm a `browser_*` tool works on each — `playwright-headless` should run invisibly, `playwright-headed` should open a visible window (the launcher prints the picked browser and mode to stderr; set `PLAYWRIGHT_CHROME_PATH` to force a specific executable). Run `bun test scripts/launch-playwright-mcp.test.ts` for the launcher's resolution and arg-building logic.
 
 `/reload-plugins` picks up edits mid-session; no need to restart between iterations.
 
