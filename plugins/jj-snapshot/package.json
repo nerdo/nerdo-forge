@@ -1,0 +1,11 @@
+{
+  "name": "jj-snapshot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "omp extension that runs `jj status` after every tool execution so jj snapshots the working copy granularly as the agent works.",
+  "omp": {
+    "extensions": [
+      "./hooks/pre/jj-snapshot.ts"
+    ]
+  }
+}

@@ -9,6 +9,12 @@
       "version": "1.10.0",
       "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
       "source": "./"
+    },
+    {
+      "name": "jj-snapshot",
+      "version": "0.1.0",
+      "description": "Runs `jj status` after every tool execution so jj snapshots the working copy granularly as the agent works; each snapshot is its own restorable operation in jj op log. omp plugin (tool_result hook).",
+      "source": "./plugins/jj-snapshot"
     }
   ]
 }

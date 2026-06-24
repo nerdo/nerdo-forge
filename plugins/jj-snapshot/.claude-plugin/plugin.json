@@ -1,0 +1,16 @@
+{
+  "name": "jj-snapshot",
+  "version": "0.1.0",
+  "description": "Runs `jj status` after every tool execution (omp `tool_result`) so jj snapshots the working copy granularly as the agent works — each snapshot is its own restorable operation in `jj op log`. Best-effort: a no-op outside a jj repo or when jj is unavailable.",
+  "author": {
+    "name": "nerdo"
+  },
+  "license": "MIT",
+  "keywords": [
+    "jujutsu",
+    "jj",
+    "snapshot",
+    "version-control",
+    "hooks"
+  ]
+}

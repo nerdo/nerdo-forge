@@ -10,7 +10,8 @@
       "Skill(nerdo-forge:setup)",
       "Skill(update-config)",
       "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-init.sh)",
-      "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-prompt.sh)"
+      "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-prompt.sh)",
+      "Bash(bunx *)"
     ]
   }
 }
