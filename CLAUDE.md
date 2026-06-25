@@ -4,11 +4,11 @@ This file governs how Claude Code should behave when editing this plugin. For us
 
 ## Plugin purpose
 
-nerdo-forge is a Claude Code plugin that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), a setup skill, and a default set of MCP servers (declared inline in `.claude-plugin/plugin.json` under `mcpServers`). Agents here are spawned as subagents by the user's main Claude Code session.
+nerdo-forge is a Claude Code plugin marketplace that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), a setup skill, and a bundle of MCP servers (declared in `plugins/nerdo-mcp-bundle/.claude-plugin/plugin.json`). The marketplace consists of three installable plugins: **nerdo-essentials** (agents, statusline, output-styles, commands), **nerdo-mcp-bundle** (MCP servers), and **jj-snapshot** (jj working-copy snapshots). Agents here are spawned as subagents by the user's main Claude Code session.
 
 ### Bundled MCP servers
 
-The plugin declares seven MCP servers inline in `.claude-plugin/plugin.json` so they are offered (with the standard per-server approval prompt) when the plugin is installed: `context7`, `clear-thought`, `json-emitter`, `precision-math`, and `excel` run directly via `bunx`/`uvx`; `playwright-headless` and `playwright-headed` both run through the bundled `scripts/launch-playwright-mcp.ts` launcher (referenced via `${CLAUDE_PLUGIN_ROOT}`), which selects a browser in order — `PLAYWRIGHT_CHROME_PATH`, then a PATH scan, each validated by a quick headless smoke launch — and otherwise hands off to Playwright's bundled browser. See the launcher's header comment for the full resolution logic. The two playwright entries differ only by the launcher's `--headed` argument: Playwright fixes the browser mode at server launch (no per-call toggle), so a headless server (background) and a headed server (visible, watch-along) are registered separately and both available every session. `prime-directive` is intentionally NOT bundled here — it ships from its own plugin.
+The MCP bundle plugin declares seven MCP servers inline in `plugins/nerdo-mcp-bundle/.claude-plugin/plugin.json` so they are offered (with the standard per-server approval prompt) when the plugin is installed: `context7`, `clear-thought`, `json-emitter`, `precision-math`, and `excel` run directly via `bunx`/`uvx`; `playwright-headless` and `playwright-headed` both run through the bundled `scripts/launch-playwright-mcp.ts` launcher (referenced via `${CLAUDE_PLUGIN_ROOT}`), which selects a browser in order — `PLAYWRIGHT_CHROME_PATH`, then a PATH scan, each validated by a quick headless smoke launch — and otherwise hands off to Playwright's bundled browser. See the launcher's header comment for the full resolution logic. The two playwright entries differ only by the launcher's `--headed` argument…
 
 Runtime prerequisites on the host `PATH`: `bun`/`bunx` for the four `bunx` servers and the two Playwright launchers (both run via `bun`), plus Python's `uv`/`uvx` for `excel`. Edits to `plugin.json`'s `mcpServers` (or the launcher script) require `/reload-plugins` or a restart to take effect.
 
@@ -105,7 +105,7 @@ Guidance in this plugin — agent prompts, the bootstrap block, slash commands, 
 
 - **Lead with the capability or role**, not the wire name: "use your precision-math calculation tool", "fetch docs via a library-documentation MCP server (such as context7)", "the prime-directive server's session-initialization tool (`initialize_session`)".
 - If a concrete identifier genuinely aids comprehension, include it **once** as an explicitly illustrative example (`such as …`, `e.g. …`) — never phrased as an exact-match requirement, and never as the thing a rule keys on.
-- **The one exception is a literal match that the harness itself requires.** Permission rules in `commands/setup.md` (e.g. `mcp__plugin_nerdo-forge_playwright-headed`, `mcp__plugin_nerdo-forge_context7`) MUST stay exact, because Claude Code matches `permissions.allow` entries by string. Note the `plugin_nerdo-forge_` infix: a server bundled by this plugin surfaces as `mcp__plugin_<plugin-name>_<server>__<tool>`, NOT the bare `mcp__<server>` — so the permission strings carry that infix. Those are configuration, not guidance — keep them verbatim.
+- **The one exception is a literal match that the harness itself requires.** Permission rules in `commands/setup.md` (e.g. `mcp__plugin_nerdo-mcp-bundle_playwright-headed`, `mcp__plugin_nerdo-mcp-bundle_context7`) MUST stay exact, because Claude Code matches `permissions.allow` entries by string. Note the `plugin_nerdo-mcp-bundle_` infix: a server bundled by this plugin surfaces as `mcp__plugin_<plugin-name>_<server>__<tool>`, NOT the bare `mcp__<server>` — so the permission strings carry that infix. Those are configuration, not guidance — keep them verbatim.
 
 When you add or edit any agent/command/doc, scan for `mcp__` and apply this rule; the only hits left should be the permission-rule strings in `commands/setup.md`.
 
@@ -118,18 +118,18 @@ When you add or edit any agent/command/doc, scan for `mcp__` and apply this rule
 Launch a Claude Code session with `--plugin-dir` pointing at the source:
 
 ```bash
-claude --plugin-dir /Users/nerdo/personal/code/nerdo-forge
+claude --plugin-dir /Users/nerdo/personal/code/nerdo-forge/plugins/nerdo-essentials
 ```
 
 This loads the plugin directly from the filesystem with no caching. Use `/reload-plugins` to pick up edits mid-session. No version bump or push needed for iteration.
 
-Invoke plugin agents by their prefixed name during testing: `nerdo-forge:researcher`, `nerdo-forge:root-cause-analyzer`, `nerdo-forge:ui-tester`.
+Invoke plugin agents by their prefixed name during testing: `nerdo-essentials:researcher`, `nerdo-essentials:root-cause-analyzer`, `nerdo-essentials:ui-tester`.
 
 ### Verifying changes before push
 
 Every change must be exercised locally before the release flow. Use `--plugin-dir` (above), then touch every surface the change affects:
 
-- **Agents** — invoke by prefixed name (`nerdo-forge:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
+- **Agents** — invoke by prefixed name (`nerdo-essentials:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
 - **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
 - **Output styles** — switch via `/output-style` and confirm formatting.
@@ -141,7 +141,7 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 
 1. **Test locally first** (see "Verifying changes before push" above). Do not bump the version until every affected surface has been exercised.
 2. **Assess upgrade impact** (see "Per-release upgrade impact assessment" below). The commit message body MUST state the impact line: `Upgrade impact: <none | re-run setup | manual migration steps>`.
-3. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
+3. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `plugins/nerdo-essentials/.claude-plugin/plugin.json`, and `plugins/nerdo-essentials/.claude-plugin/marketplace.json`.
 4. Commit and push to the marketplace repo.
 5. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
 
@@ -151,11 +151,11 @@ Before every release, walk this checklist to confirm the standard "Installing an
 
 | Surface | Migration on uninstall + install | User action required |
 |---|---|---|
-| **Statusline** | Cache dir path becomes stale (the path in `~/.claude/settings.json` embeds the old version dir) | Re-run `/nerdo-forge:setup` to point at the new cache dir. |
-| **Permission bundles** | Reconciled idempotently by setup — added rules for ACTIVE bundles get applied; rules removed from a bundle get cleaned up | Re-run `/nerdo-forge:setup`. |
+| **Statusline** | Cache dir path becomes stale (the path in `~/.claude/settings.json` embeds the old version dir) | Re-run `/nerdo-essentials:setup` to point at the new cache dir. |
+| **Permission bundles** | Reconciled idempotently by setup — added rules for ACTIVE bundles get applied; rules removed from a bundle get cleaned up | Re-run `/nerdo-essentials:setup`. |
 | **Output styles** | Replaced wholesale | None. |
 | **Slash commands** | Replaced wholesale | None. |
-| **Agents** | Replaced wholesale | None — provided callers use prefixed names (`nerdo-forge:researcher`, not bare `researcher`). See Hazards. |
+| **Agents** | Replaced wholesale | None — provided callers use prefixed names (`nerdo-essentials:researcher`, not bare `researcher`). See Hazards. |
 | **MCP servers** | Replaced wholesale (declared inline in `plugin.json`; `${CLAUDE_PLUGIN_ROOT}` re-resolves to the new version dir automatically) | None on a normal update. On **first** install of a version that bundles a server the user also registered at user scope, that name now exists twice — remove the user-scope copy with `claude mcp remove -s user <name>`. New servers prompt the standard per-server approval. |
 
 If a release introduces state that lives **outside** these surfaces — a sentinel file the runtime depends on, a settings field outside what setup writes, a global directory created at runtime — the release is NOT covered by the standard procedure. Document the explicit migration steps as part of the assessment AND in the commit body.
@@ -175,18 +175,18 @@ The sequence that actually works:
 
 ```
 /plugin marketplace update                # refresh the manifest cache; UI lists new versions
-/plugin uninstall nerdo-forge@nerdo-plugins
-/plugin install nerdo-forge@nerdo-plugins
-/nerdo-forge:setup                        # re-run setup to re-apply AI-driven steps
+/plugin uninstall nerdo-essentials@nerdo-plugins
+/plugin install nerdo-essentials@nerdo-plugins
+/nerdo-essentials:setup                        # re-run setup to re-apply AI-driven steps
 ```
 
 `/plugin marketplace update` is the critical step and is easy to miss — it is a **different command** from `/plugin update`. `/reload-plugins` does not refresh marketplaces; it only reloads already-installed plugins from their cache dirs.
 
-**Why `/nerdo-forge:setup` must follow an update:** Some setup writes point at the *specific installed version path*. The statusline entry in `~/.claude/settings.json` embeds the cache dir (e.g. `.../nerdo-forge/1.3.0/dist/statusline.js`) — after installing 1.4.0, that path is stale and the statusline will try to execute a file from the old cache dir (which may be GC'd within ~7 days). Re-running setup also gives the opportunity to re-apply permission bundles or the MCP init directive if the new version's setup procedure has changed.
+**Why `/nerdo-essentials:setup` must follow an update:** Some setup writes point at the *specific installed version path*. The statusline entry in `~/.claude/settings.json` embeds the cache dir (e.g. `.../nerdo-essentials/1.3.0/dist/statusline.js`) — after installing 1.4.0, that path is stale and the statusline will try to execute a file from the old cache dir (which may be GC'd within ~7 days). Re-running setup also gives the opportunity to re-apply permission bundles or the MCP init directive if the new version's setup procedure has changed.
 
 ### Known issue: `/plugin update` does not work in this environment
 
-`/plugin update nerdo-forge@nerdo-plugins` silently no-ops on this user's machine even after refreshing the marketplace cache. Do not recommend it. Use the uninstall + install pair from the procedure above.
+`/plugin update nerdo-essentials@nerdo-plugins` silently no-ops on this user's machine even after refreshing the marketplace cache. Do not recommend it. Use the uninstall + install pair from the procedure above.
 
 ### Local dev bypasses all of this
 
@@ -195,5 +195,5 @@ For the development machine, use `--plugin-dir` (see "Local development" above).
 ### Hazards to avoid
 
 - **Do NOT `cp` agent, command, or skill files into `~/.claude/plugins/cache/`.** That cache is owned by the plugin installer. Manual edits are overwritten on update and obscure what version is actually running. If you need to iterate quickly, use `--plugin-dir` instead.
-- **Do NOT place plugin-provided agents at `~/.claude/agents/*.md`.** Files there are user-level agents resolved by bare name, and they take precedence over plugin agents — meaning a `researcher.md` at `~/.claude/agents/` will shadow `nerdo-forge:researcher` whenever someone (or a subagent spawner) invokes `researcher` without the prefix. This is an invisible-staleness trap.
+- **Do NOT place plugin-provided agents at `~/.claude/agents/*.md`.** Files there are user-level agents resolved by bare name, and they take precedence over plugin agents — meaning a `researcher.md` at `~/.claude/agents/` will shadow `nerdo-essentials:researcher` whenever someone (or a subagent spawner) invokes `researcher` without the prefix. This is an invisible-staleness trap.
 - **Invoke plugin agents by prefixed name** in prompts, agent descriptions, and cross-agent references. Bare names invite shadowing.

@@ -1,21 +1,15 @@
 {
-  "name": "nerdo-forge",
-  "version": "1.10.0",
-  "type": "module",
+  "name": "nerdo-forge-workspace",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": ["plugins/nerdo-essentials", "plugins/nerdo-mcp-bundle", "plugins/jj-snapshot"],
   "scripts": {
-    "build": "bun build src/statusline.ts --outdir dist --target node",
-    "typecheck": "tsc --noEmit",
-    "version:sync": "bun run scripts/sync-version.ts",
-    "bump:patch": "bun run scripts/bump-version.ts patch",
-    "bump:minor": "bun run scripts/bump-version.ts minor",
-    "bump:major": "bun run scripts/bump-version.ts major"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "build": "bun run --cwd plugins/nerdo-essentials build",
+    "typecheck": "bun run --cwd plugins/nerdo-essentials typecheck",
+    "test": "bun run --cwd plugins/nerdo-essentials test",
+    "version:sync": "bun run --cwd plugins/nerdo-essentials version:sync",
+    "bump:patch": "bun run --cwd plugins/nerdo-essentials bump:patch",
+    "bump:minor": "bun run --cwd plugins/nerdo-essentials bump:minor",
+    "bump:major": "bun run --cwd plugins/nerdo-essentials bump:major"
   }
 }

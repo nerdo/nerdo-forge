@@ -1,0 +1,26 @@
+{
+  "name": "nerdo-plugins",
+  "owner": {
+    "name": "nerdo"
+  },
+  "plugins": [
+    {
+      "name": "nerdo-essentials",
+      "version": "1.10.0",
+      "description": "Custom statusline with jj/language detection, Disciplined Engineering output style, setup command, and specialized agents (researcher, root-cause-analyzer, ui-tester)",
+      "source": "."
+    },
+    {
+      "name": "nerdo-mcp-bundle",
+      "version": "1.0.0",
+      "description": "Collection of MCP servers: context7, clear-thought, json-emitter, precision-math, excel, and Playwright (headless + headed)",
+      "source": "../nerdo-mcp-bundle"
+    },
+    {
+      "name": "jj-snapshot",
+      "version": "0.1.0",
+      "description": "Runs `jj status` after every tool execution so jj snapshots the working copy granularly as the agent works; each snapshot is its own restorable operation in jj op log. omp plugin (tool_result hook).",
+      "source": "../jj-snapshot"
+    }
+  ]
+}

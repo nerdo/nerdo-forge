@@ -1,0 +1,21 @@
+{
+  "name": "nerdo-essentials",
+  "version": "1.10.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/statusline.ts --outdir dist --target node",
+    "typecheck": "tsc --noEmit",
+    "version:sync": "bun run scripts/sync-version.ts",
+    "bump:patch": "bun run scripts/bump-version.ts patch",
+    "bump:minor": "bun run scripts/bump-version.ts minor",
+    "bump:major": "bun run scripts/bump-version.ts major"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

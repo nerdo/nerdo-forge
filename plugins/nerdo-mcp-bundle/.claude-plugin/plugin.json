@@ -1,16 +1,16 @@
 {
-  "name": "nerdo-forge",
-  "version": "1.10.0",
-  "description": "Custom statusline with jj/language detection and Disciplined Engineering output style",
+  "name": "nerdo-mcp-bundle",
+  "version": "1.0.0",
+  "description": "Collection of MCP servers: context7, clear-thought, json-emitter, precision-math, excel, and Playwright (headless + headed)",
   "author": {
     "name": "nerdo"
   },
   "license": "MIT",
   "keywords": [
-    "statusline",
-    "jujutsu",
-    "output-style",
-    "engineering"
+    "mcp",
+    "context7",
+    "clear-thought",
+    "playwright"
   ],
   "mcpServers": {
     "context7": {

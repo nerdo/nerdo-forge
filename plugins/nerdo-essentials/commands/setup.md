@@ -1,12 +1,12 @@
 ---
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
-description: Configure the nerdo-forge statusline, output style, and permission defaults
+description: Configure the nerdo-essentials statusline, output style, and permission defaults
 user-invocable: true
 ---
 
-# nerdo-forge Setup
+# nerdo-essentials Setup
 
-You are setting up the nerdo-forge plugin. Perform these steps:
+You are setting up the nerdo-essentials plugin. Perform these steps:
 
 ## 0. Resolve the Claude config directory
 
@@ -38,7 +38,7 @@ Everywhere below that references `<config_dir>` or `<config_json>`, substitute t
 
 ## 1. Locate the plugin
 
-The plugin root is the directory containing this command file's parent. Find the actual resolved path of the plugin installation by searching for `nerdo-forge` in `<config_dir>/plugins/installed_plugins.json`. Extract the `installPath` value.
+The plugin root is the directory containing this command file's parent. Find the actual resolved path of the plugin installation by searching for `nerdo-essentials` in `<config_dir>/plugins/installed_plugins.json`. Extract the `installPath` value.
 
 If not found in installed_plugins.json, check if the plugin is running from a local development path by looking for `.claude-plugin/plugin.json` in ancestor directories of this command file.
 
@@ -63,7 +63,7 @@ Preserve all existing settings. Only modify the `statusLine` field.
 
 ## 3. Enable verbose mode
 
-Read `<config_json>`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-forge context usage bar.
+Read `<config_json>`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-essentials context usage bar.
 
 Preserve all existing data. Only modify the `verbose` field.
 
@@ -146,10 +146,10 @@ If the user chose "No", skip to §8.
 **Options** (append the live state string to each label):
 
 1. **Label:** "Essentials (Recommended) — currently <state>"
-   **Description:** "The nerdo-forge-bundled MCP servers (context7, precision-math, clear-thought, json-emitter, excel); WebSearch; WebFetch for any site."
+   **Description:** "The nerdo-essentials-bundled MCP servers (context7, precision-math, clear-thought, json-emitter, excel); WebSearch; WebFetch for any site."
 
 2. **Label:** "Browser testing — currently <state>"
-   **Description:** "All tools on both nerdo-forge-bundled playwright MCP servers (headless for background runs, headed for watch-along sessions). Enables the ui-tester agent and browser automation."
+   **Description:** "All tools on both nerdo-essentials-bundled playwright MCP servers (headless for background runs, headed for watch-along sessions). Enables the ui-tester agent and browser automation."
 
 3. **Label:** "jj safe commands — currently <state>"
    **Description:** "Read-only jj (root, status, diff, log, show) plus reversible writes (describe, commit, new, squash, split). Excludes destructive/external commands."
@@ -182,26 +182,26 @@ Rules in `permissions.allow` that are not listed in any bundle are preserved exa
 
 **MCP entry form:** Use the server-level string exactly as listed — do NOT expand to the tool-wildcard form (`...__*`). The server-level entry already covers all tools on that server; adding both is duplicative.
 
-**Plugin-bundled vs user/project-scope naming (CRITICAL):** a server bundled *by a plugin* is namespaced with a `plugin_<plugin-name>_` infix, so its server-level string is `mcp__plugin_nerdo-forge_<server>` (e.g. `mcp__plugin_nerdo-forge_playwright-headless`) — NOT the bare `mcp__playwright-headless`. A bare `mcp__<server>` matches only a server registered at user or project scope. Since nerdo-forge now ships these servers itself, the rule lists below use the `mcp__plugin_nerdo-forge_*` form for them. Servers provided at user/project scope or by *other* plugins are not nerdo-forge's concern — this command does not add, manage, or remove their permissions.
+**Plugin-bundled vs user/project-scope naming (CRITICAL):** a server bundled *by a plugin* is namespaced with a `plugin_<plugin-name>_` infix, so its server-level string is `mcp__plugin_nerdo-mcp-bundle_<server>` (e.g. `mcp__plugin_nerdo-mcp-bundle_playwright-headless`) — NOT the bare `mcp__playwright-headless`. A bare `mcp__<server>` matches only a server registered at user or project scope. Since nerdo-essentials now ships these servers itself, the rule lists below use the `mcp__plugin_nerdo-mcp-bundle_*` form for them. Servers provided at user/project scope or by *other* plugins are not nerdo-essentials's concern — this command does not add, manage, or remove their permissions.
 
 - **When ADDING:** if an existing entry in `permissions.allow` uses the wildcard form (`mcp__<server>__*`) for a server being added, replace it with the server-level form rather than keeping both.
 - **When REMOVING:** remove only the exact bundle rule string (the server-level form). Leave any wildcard or user-specific variant alone so the user can clean it up manually if they choose.
 
 **Bundle: Essentials**
 ```
-mcp__plugin_nerdo-forge_context7
-mcp__plugin_nerdo-forge_precision-math
-mcp__plugin_nerdo-forge_clear-thought
-mcp__plugin_nerdo-forge_json-emitter
-mcp__plugin_nerdo-forge_excel
+mcp__plugin_nerdo-mcp-bundle_context7
+mcp__plugin_nerdo-mcp-bundle_precision-math
+mcp__plugin_nerdo-mcp-bundle_clear-thought
+mcp__plugin_nerdo-mcp-bundle_json-emitter
+mcp__plugin_nerdo-mcp-bundle_excel
 WebSearch
 WebFetch
 ```
 
 **Bundle: Browser testing**
 ```
-mcp__plugin_nerdo-forge_playwright-headless
-mcp__plugin_nerdo-forge_playwright-headed
+mcp__plugin_nerdo-mcp-bundle_playwright-headless
+mcp__plugin_nerdo-mcp-bundle_playwright-headed
 ```
 
 **Bundle: jj safe commands**
@@ -299,7 +299,7 @@ This is the one bundle rule whose string is config-dir-dependent. Substitute `<c
 
 ### 7e. Migrate superseded MCP permission strings
 
-Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-forge now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-forge_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-forge_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind.
+Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-essentials now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-mcp-bundle_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-mcp-bundle_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind.
 
 Whenever the user chose "Yes, review and adjust" in §7b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
 
@@ -316,13 +316,13 @@ mcp__excel
 mcp__excel__*
 mcp__playwright
 mcp__playwright__*
-mcp__plugin_nerdo-forge_playwright
-mcp__plugin_nerdo-forge_playwright__*
+mcp__plugin_nerdo-mcp-bundle_playwright
+mcp__plugin_nerdo-mcp-bundle_playwright__*
 ```
 
-Do NOT remove anything outside the list above. The list is exhaustive for nerdo-forge's own bundled servers; leave every other `permissions.allow` entry — user/project-scope servers and servers provided by *other* plugins — untouched.
+Do NOT remove anything outside the list above. The list is exhaustive for nerdo-essentials's own bundled servers; leave every other `permissions.allow` entry — user/project-scope servers and servers provided by *other* plugins — untouched.
 
-Caveat to surface if any of these were present and removed: this also drops permissions for any *user/project-scope* server of the same name. That is intended — nerdo-forge now provides these servers, and the dedup step (`claude mcp remove -s user <name>`) removes those user-scope copies. If you deliberately keep a user-scope copy of one of these and want it allowed, re-add its grant after setup.
+Caveat to surface if any of these were present and removed: this also drops permissions for any *user/project-scope* server of the same name. That is intended — nerdo-essentials now provides these servers, and the dedup step (`claude mcp remove -s user <name>`) removes those user-scope copies. If you deliberately keep a user-scope copy of one of these and want it allowed, re-add its grant after setup.
 
 ## 8. Report to the user
 

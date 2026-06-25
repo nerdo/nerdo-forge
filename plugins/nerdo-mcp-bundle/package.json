@@ -1,0 +1,12 @@
+{
+  "name": "nerdo-mcp-bundle",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "bun test scripts/launch-playwright-mcp.test.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
