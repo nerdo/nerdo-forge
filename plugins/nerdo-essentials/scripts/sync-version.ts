@@ -15,8 +15,8 @@ const plugin = JSON.parse(readFileSync(pluginPath, "utf-8"));
 plugin.version = version;
 writeFileSync(pluginPath, JSON.stringify(plugin, null, 2) + "\n");
 
-// Update marketplace.json
-const marketplacePath = join(root, ".claude-plugin", "marketplace.json");
+// Update marketplace.json (lives at the repo root for the github marketplace source)
+const marketplacePath = join(root, "..", "..", ".claude-plugin", "marketplace.json");
 const marketplace = JSON.parse(readFileSync(marketplacePath, "utf-8"));
 for (const p of marketplace.plugins) {
   if (p.name === pkg.name) {

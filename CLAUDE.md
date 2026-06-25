@@ -141,7 +141,7 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 
 1. **Test locally first** (see "Verifying changes before push" above). Do not bump the version until every affected surface has been exercised.
 2. **Assess upgrade impact** (see "Per-release upgrade impact assessment" below). The commit message body MUST state the impact line: `Upgrade impact: <none | re-run setup | manual migration steps>`.
-3. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `plugins/nerdo-essentials/.claude-plugin/plugin.json`, and `plugins/nerdo-essentials/.claude-plugin/marketplace.json`.
+3. Bump version with the semver scripts: `bun run bump:minor` (or `bump:patch` / `bump:major`). This syncs the version across `package.json`, `plugins/nerdo-essentials/.claude-plugin/plugin.json`, and the repo-root `.claude-plugin/marketplace.json` (the manifest a GitHub-sourced marketplace requires at the repository root).
 4. Commit and push to the marketplace repo.
 5. On each machine that has the plugin installed, follow the "Installing an updated version" steps below.
 
