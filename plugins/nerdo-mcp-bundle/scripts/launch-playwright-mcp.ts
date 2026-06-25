@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Launches the Playwright MCP server for the nerdo-forge plugin.
+// Launches the Playwright MCP server for the nerdo-mcp-bundle plugin.
 //
 // Browser selection, in order:
 //   1. PLAYWRIGHT_CHROME_PATH (explicit override).

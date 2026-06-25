@@ -35,7 +35,7 @@ It is **best-effort**: outside a jj repo, when `jj` is not on `PATH`, or on any 
 Or from a local clone:
 
 ```
-/marketplace add ~/path/to/nerdo-forge
+/marketplace add ~/path/to/nerdo-forge/plugins/nerdo-essentials
 /marketplace install jj-snapshot@nerdo-plugins
 ```
 

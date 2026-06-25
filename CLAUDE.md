@@ -1,4 +1,4 @@
-# nerdo-forge — Plugin Authoring Guide
+# nerdo-forge — Plugin Marketplace Authoring Guide
 
 This file governs how Claude Code should behave when editing this plugin. For user-facing documentation see `README.md`.
 
