@@ -4,7 +4,7 @@ This file governs how Claude Code should behave when editing this plugin. For us
 
 ## Plugin purpose
 
-nerdo-forge is a Claude Code plugin marketplace that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), output styles (`output-styles/`), slash commands (`commands/`), a setup skill, and a bundle of MCP servers (declared in `plugins/nerdo-mcp-bundle/.claude-plugin/plugin.json`). The marketplace consists of three installable plugins: **nerdo-essentials** (agents, statusline, output-styles, commands), **nerdo-mcp-bundle** (MCP servers), and **jj-snapshot** (jj working-copy snapshots). Agents here are spawned as subagents by the user's main Claude Code session.
+nerdo-forge is a Claude Code plugin marketplace that ships opinionated agents (`agents/`), a status line (`src/statusline.ts`), slash commands (`commands/`), a setup skill, and a bundle of MCP servers (declared in `plugins/nerdo-mcp-bundle/.claude-plugin/plugin.json`). The marketplace consists of three installable plugins: **nerdo-essentials** (agents, statusline, commands), **nerdo-mcp-bundle** (MCP servers), and **jj-snapshot** (jj working-copy snapshots). Agents here are spawned as subagents by the user's main Claude Code session.
 
 ### Bundled MCP servers
 
@@ -132,7 +132,6 @@ Every change must be exercised locally before the release flow. Use `--plugin-di
 - **Agents** — invoke by prefixed name (`nerdo-essentials:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
 - **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
-- **Output styles** — switch via `/output-style` and confirm formatting.
 - **MCP servers** — after `/reload-plugins` (or restart), run `/mcp` to confirm the bundled servers are listed, approve them, and call one cheap tool (e.g. `precision-math` `calculate`) to confirm a server responds. For the playwright servers, confirm a `browser_*` tool works on each — `playwright-headless` should run invisibly, `playwright-headed` should open a visible window (the launcher prints the picked browser and mode to stderr; set `PLAYWRIGHT_CHROME_PATH` to force a specific executable). Run `bun test scripts/launch-playwright-mcp.test.ts` for the launcher's resolution and arg-building logic.
 
 `/reload-plugins` picks up edits mid-session; no need to restart between iterations.
@@ -153,7 +152,6 @@ Before every release, walk this checklist to confirm the standard "Installing an
 |---|---|---|
 | **Statusline** | Cache dir path becomes stale (the path in `~/.claude/settings.json` embeds the old version dir) | Re-run `/nerdo-essentials:setup` to point at the new cache dir. |
 | **Permission bundles** | Reconciled idempotently by setup — added rules for ACTIVE bundles get applied; rules removed from a bundle get cleaned up | Re-run `/nerdo-essentials:setup`. |
-| **Output styles** | Replaced wholesale | None. |
 | **Slash commands** | Replaced wholesale | None. |
 | **Agents** | Replaced wholesale | None — provided callers use prefixed names (`nerdo-essentials:researcher`, not bare `researcher`). See Hazards. |
 | **MCP servers** | Replaced wholesale (declared inline in `plugin.json`; `${CLAUDE_PLUGIN_ROOT}` re-resolves to the new version dir automatically) | None on a normal update. On **first** install of a version that bundles a server the user also registered at user scope, that name now exists twice — remove the user-scope copy with `claude mcp remove -s user <name>`. New servers prompt the standard per-server approval. |
@@ -161,7 +159,7 @@ Before every release, walk this checklist to confirm the standard "Installing an
 If a release introduces state that lives **outside** these surfaces — a sentinel file the runtime depends on, a settings field outside what setup writes, a global directory created at runtime — the release is NOT covered by the standard procedure. Document the explicit migration steps as part of the assessment AND in the commit body.
 
 For releases that fall entirely within the table above:
-- If only `plugin.json`-declared surfaces changed (output styles, slash commands, agents, MCP servers) → `Upgrade impact: none`
+- If only `plugin.json`-declared surfaces changed (slash commands, agents, MCP servers) → `Upgrade impact: none`
 - If statusline path or permission bundles changed → `Upgrade impact: re-run setup`
 - If anything outside the table changed → `Upgrade impact: <explicit migration steps>`
 

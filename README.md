@@ -1,6 +1,6 @@
 # nerdo-forge — Plugin Marketplace
 
-A Claude Code plugin marketplace with three installable plugins: **nerdo-essentials** (agents, statusline, output styles, commands, setup), **nerdo-mcp-bundle** (MCP servers), and **jj-snapshot** (jj working-copy snapshots).
+A Claude Code plugin marketplace with three installable plugins: **nerdo-essentials** (agents, statusline, commands, setup), **nerdo-mcp-bundle** (MCP servers), and **jj-snapshot** (jj working-copy snapshots).
 
 ## What's Included
 
@@ -13,16 +13,9 @@ The primary plugin. Includes:
 - Language runtime versions (bun/node, python, go, rust) detected from project files
 - [Jujutsu (jj)](https://github.com/jj-vcs/jj) VCS info: working copy and parent change IDs, descriptions, file change counts with color-coded status
 
-**Output Style: Disciplined Engineering** — An engineering-focused output style that emphasizes:
-- Evidence-based verification and intellectual honesty
-- A mandatory testing discipline cycle (test → fix → typecheck → test → build)
-- End-user validation as a feedback loop, not a handoff
-- User-documented preferences treated as prime directives (highest authority)
-- Claims vs. inferences language precision
-
 **Specialized agents** — researcher, root-cause-analyzer, ui-tester — spawned by the host Claude Code session for delegated work.
 
-**Setup command** — configures statusline, output style, and permission bundles.
+**Setup command** — configures statusline and permission bundles.
 
 ### nerdo-mcp-bundle
 
@@ -84,7 +77,7 @@ After installing nerdo-essentials, run:
 
 This will:
 1. Configure your Claude config directory's `settings.json` (honoring `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude`) to use the statusline
-2. Ask whether to set Disciplined Engineering as your default output style
+2. Reconcile permission bundles and optionally disable auto-memory
 3. Confirm everything is wired up
 
 Restart Claude Code for changes to take effect.

@@ -6,8 +6,8 @@
   "plugins": [
     {
       "name": "nerdo-essentials",
-      "version": "1.10.0",
-      "description": "Custom statusline with jj/language detection, Disciplined Engineering output style, setup command, and specialized agents (researcher, root-cause-analyzer, ui-tester)",
+      "version": "1.11.0",
+      "description": "Custom statusline with jj/language detection, setup command, and specialized agents (researcher, root-cause-analyzer, ui-tester)",
       "source": "./plugins/nerdo-essentials"
     },
     {

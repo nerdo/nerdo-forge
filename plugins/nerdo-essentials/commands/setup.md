@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Edit, Write, Bash, AskUserQuestion
-description: Configure the nerdo-essentials statusline, output style, and permission defaults
+description: Configure the nerdo-essentials statusline and permission defaults
 user-invocable: true
 ---
 
@@ -67,21 +67,13 @@ Read `<config_json>`. Set `"verbose": true` if not already set. This enables the
 
 Preserve all existing data. Only modify the `verbose` field.
 
-## 4. Confirm output style availability
+## 4. Remove the retired Disciplined Engineering output style
 
-Verify the output style file exists at `<plugin_root>/output-styles/Disciplined Engineering.md`.
+The "Disciplined Engineering" output style has been retired. Its guidance is now delivered authoritatively by the prime-directive system, and a duplicated copy in an output style only risks drift — so the style file no longer ships with the plugin.
 
-## 5. Ask about default output style
+Clean up any stale default an earlier setup left behind: read `<config_dir>/settings.json`, and if the top-level `"outputStyle"` field is set to `"Disciplined Engineering"`, remove that field entirely — a default pointing at a deleted style fails to resolve every session. Preserve all other settings. If `"outputStyle"` is absent or set to anything else, leave it untouched.
 
-Ask the user:
-
-> The "Disciplined Engineering" output style is now available and can be selected anytime with `/output-style`. Would you like to set it as your **default** output style? (This writes to `<config_dir>/settings.json` so it activates automatically on every new session.)
-
-If yes, add `"outputStyle": "Disciplined Engineering"` to `<config_dir>/settings.json`, preserving all other settings.
-
-If no, skip this step.
-
-## 6. Ask about disabling auto-memory
+## 5. Ask about disabling auto-memory
 
 Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `<config_dir>/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. Disabling it is an optional personal preference.
 
@@ -93,15 +85,15 @@ If yes, read `<config_dir>/settings.json` and set the top-level `"autoMemoryEnab
 
 If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
 
-## 7. Reconcile permission bundles
+## 6. Reconcile permission bundles
 
 Many tools are safe but annoying to approve one-by-one. This step reconciles `<config_dir>/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
 
 The goal is an idempotent, symmetric operation: running setup repeatedly with the same selections should produce no change, and unchecking a previously-applied bundle should actually remove it.
 
-### 7a. Inspect current state
+### 6a. Inspect current state
 
-Read `<config_dir>/settings.json` and, for each of the six bundles listed in §7d, compute the current state by exact-string comparison against `permissions.allow`:
+Read `<config_dir>/settings.json` and, for each of the six bundles listed in §6d, compute the current state by exact-string comparison against `permissions.allow`:
 
 - **ON** — every rule in the bundle is present
 - **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
@@ -117,7 +109,7 @@ Display the result to the user verbatim before asking anything, for example:
 > - GitHub CLI (read-only): ON
 > - Transcript inspection: OFF
 
-### 7b. Ask whether to change anything
+### 6b. Ask whether to change anything
 
 Use `AskUserQuestion`:
 
@@ -133,11 +125,11 @@ Use `AskUserQuestion`:
 2. **Label:** "Yes, review and adjust"
    **Description:** "Show the bundle selector. Declare the desired end state explicitly; setup adds missing rules for checked bundles and removes rules for unchecked ones."
 
-If the user chose "No", skip to §8.
+If the user chose "No", skip to §7.
 
-### 7c. Collect desired end state
+### 6c. Collect desired end state
 
-`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §7a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
+`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §6a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
 
 **Question 1:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
 **Header:** "Bundles 1/2"
@@ -169,7 +161,7 @@ If the user chose "No", skip to §8.
 2. **Label:** "Transcript inspection — currently <state>"
    **Description:** "Read access to `<config_dir>/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
 
-### 7d. Apply the desired end state
+### 6d. Apply the desired end state
 
 For each of the six bundles, using the exact rule lists below:
 
@@ -295,13 +287,13 @@ Bash(gh --version)
 Read(<config_dir>/projects/**)
 ```
 
-This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §7d, compare against this substituted form — not the literal `<config_dir>` placeholder.
+This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §6d, compare against this substituted form — not the literal `<config_dir>` placeholder.
 
-### 7e. Migrate superseded MCP permission strings
+### 6e. Migrate superseded MCP permission strings
 
-Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-essentials now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-mcp-bundle_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-mcp-bundle_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind.
+Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-essentials now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-mcp-bundle_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-mcp-bundle_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §6d's "preserve unlisted rules" rule would otherwise leave them behind.
 
-Whenever the user chose "Yes, review and adjust" in §7b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
+Whenever the user chose "Yes, review and adjust" in §6b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
 
 ```
 mcp__context7
@@ -324,12 +316,12 @@ Do NOT remove anything outside the list above. The list is exhaustive for nerdo-
 
 Caveat to surface if any of these were present and removed: this also drops permissions for any *user/project-scope* server of the same name. That is intended — nerdo-essentials now provides these servers, and the dedup step (`claude mcp remove -s user <name>`) removes those user-scope copies. If you deliberately keep a user-scope copy of one of these and want it allowed, re-add its grant after setup.
 
-## 8. Report to the user
+## 7. Report to the user
 
 Tell the user:
 - Statusline has been configured (show the path used)
-- "Disciplined Engineering" output style status (set as default, or available via `/output-style`)
+- Retired output style cleanup: if a stale `"outputStyle": "Disciplined Engineering"` default was removed, say so; otherwise say there was none to clean up
 - Auto-memory status (disabled, or left on)
-- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §7b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
-- Superseded-string migration (§7e): if any bare/wildcard legacy MCP strings were removed, list them; otherwise say there were none.
+- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §6b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
+- Superseded-string migration (§6e): if any bare/wildcard legacy MCP strings were removed, list them; otherwise say there were none.
 - They may need to restart Claude Code for changes to take effect
