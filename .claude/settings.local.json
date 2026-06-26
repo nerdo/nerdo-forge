@@ -11,7 +11,9 @@
       "Skill(update-config)",
       "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-init.sh)",
       "Bash(/Users/nerdo/personal/code/nerdo-forge/hooks/pd-protocol-prompt.sh)",
-      "Bash(bunx *)"
+      "Bash(bunx *)",
+      "Bash(git -C /Users/nerdo/.claude/plugins/marketplaces/nerdo-plugins/ remote -v)",
+      "Bash(git -C /Users/nerdo/.claude/plugins/marketplaces/nerdo-plugins/ log --oneline -3)"
     ]
   }
 }
