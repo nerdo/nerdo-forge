@@ -1,3 +1,8 @@
+// LOCATION: this test lives under `test/`, NOT beside the hook in `hooks/pre/`.
+// omp scans every file in a plugin's `hooks/pre|post/` and loads it into the
+// extension runtime (non-recursive glob `*`, no `.test.` exclusion). A test file
+// there is imported outside `bun test`, so its top-level `describe()` throws
+// "Cannot use describe outside of the test runner" and breaks omp startup.
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -6,7 +11,7 @@ import { join } from "node:path";
 import jjSnapshot, {
   type OmpHookApi,
   type ToolResultHandler,
-} from "./jj-snapshot.ts";
+} from "../hooks/pre/jj-snapshot.ts";
 
 // Count operations WITHOUT snapshotting the working copy (--ignore-working-copy),
 // so the count reflects only operations the code under test created — never an
