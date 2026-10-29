@@ -52,12 +52,14 @@ Read `<config_dir>/settings.json`. Update or add the `statusLine` field:
 {
   "statusLine": {
     "type": "command",
-    "command": "node <plugin_root>/dist/statusline.js"
+    "command": "bun <plugin_root>/src/statusline.ts"
   }
 }
 ```
 
 Replace `<plugin_root>` with the actual resolved path from step 1.
+
+The statusline runs from TypeScript source, so `bun` must be on `PATH`. The plugin ships no build output.
 
 Preserve all existing settings. Only modify the `statusLine` field.
 

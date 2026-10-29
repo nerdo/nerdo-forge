@@ -84,15 +84,15 @@ Restart Claude Code for changes to take effect.
 
 ## Development
 
-Requires [bun](https://bun.sh) for building from source.
+Requires [bun](https://bun.sh).
 
 ```bash
 bun install
-bun run build      # Rebuild statusline to dist/
+bun run test        # Run the tests
 bun run typecheck   # Type-check without emitting
 ```
 
-The pre-built `dist/statusline.js` is committed to the repo, so end users don't need bun.
+The statusline runs from `src/statusline.ts` with bun, so there is no build step. End users need bun on `PATH`, which the MCP bundle already requires.
 
 ## License
 

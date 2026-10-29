@@ -130,7 +130,7 @@ Invoke plugin agents by their prefixed name during testing: `nerdo-essentials:re
 Every change must be exercised locally before the release flow. Use `--plugin-dir` (above), then touch every surface the change affects:
 
 - **Agents** — invoke by prefixed name (`nerdo-essentials:researcher`, etc.). Confirm the bootstrap runs (prime-directive calls visible in trace) and default concerns are loaded.
-- **Statusline** — run `bun run build`, then `/reload-plugins`, and visually inspect.
+- **Statusline** — run `bun run test`, then `/reload-plugins`, and visually inspect. The statusline runs from `src/statusline.ts` with bun; there is no build step.
 - **Slash commands** — invoke by prefixed name and confirm resolution to the source version.
 - **MCP servers** — after `/reload-plugins` (or restart), run `/mcp` to confirm the bundled servers are listed, approve them, and call one cheap tool (e.g. `precision-math` `calculate`) to confirm a server responds. For the playwright servers, confirm a `browser_*` tool works on each — `playwright-headless` should run invisibly, `playwright-headed` should open a visible window (the launcher prints the picked browser and mode to stderr; set `PLAYWRIGHT_CHROME_PATH` to force a specific executable). Run `bun test scripts/launch-playwright-mcp.test.ts` for the launcher's resolution and arg-building logic.
 
@@ -180,7 +180,7 @@ The sequence that actually works:
 
 `/plugin marketplace update` is the critical step and is easy to miss — it is a **different command** from `/plugin update`. `/reload-plugins` does not refresh marketplaces; it only reloads already-installed plugins from their cache dirs.
 
-**Why `/nerdo-essentials:setup` must follow an update:** Some setup writes point at the *specific installed version path*. The statusline entry in `~/.claude/settings.json` embeds the cache dir (e.g. `.../nerdo-essentials/1.3.0/dist/statusline.js`) — after installing 1.4.0, that path is stale and the statusline will try to execute a file from the old cache dir (which may be GC'd within ~7 days). Re-running setup also gives the opportunity to re-apply permission bundles or the MCP init directive if the new version's setup procedure has changed.
+**Why `/nerdo-essentials:setup` must follow an update:** Some setup writes point at the *specific installed version path*. The statusline entry in `~/.claude/settings.json` embeds the cache dir (e.g. `.../nerdo-essentials/1.3.0/src/statusline.ts`) — after installing 1.4.0, that path is stale and the statusline will try to execute a file from the old cache dir (which may be GC'd within ~7 days). Re-running setup also gives the opportunity to re-apply permission bundles or the MCP init directive if the new version's setup procedure has changed.
 
 ### Known issue: `/plugin update` does not work in this environment
 

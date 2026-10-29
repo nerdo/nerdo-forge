@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build src/statusline.ts --outdir dist --target node",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "version:sync": "bun run scripts/sync-version.ts",
     "bump:patch": "bun run scripts/bump-version.ts patch",
