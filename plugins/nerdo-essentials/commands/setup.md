@@ -63,11 +63,30 @@ The statusline runs from TypeScript source, so `bun` must be on `PATH`. The plug
 
 Preserve all existing settings. Only modify the `statusLine` field.
 
-## 3. Enable verbose mode
+## 3. Ask about verbose mode
 
-Read `<config_json>`. Set `"verbose": true` if not already set. This enables the built-in token counter in the status line notification area, which complements the nerdo-essentials context usage bar.
+Verbose mode is the user's choice. Change the `verbose` field only as the user's answer below directs.
 
-Preserve all existing data. Only modify the `verbose` field.
+1. Read `<config_json>`. The current state is **ON** when the top-level `"verbose"` field is `true`, and **OFF** otherwise.
+2. Use `AskUserQuestion`, with `<state>` replaced by the current state. Ask even when the state is ON: an earlier version of setup turned verbose mode on without asking.
+
+   **Question:** "Verbose mode is currently <state>. Should it be on? Verbose mode expands all of Claude Code's outputs. The default mode (off) is more compact."
+   **Header:** "Verbose"
+   **multiSelect:** false
+
+   **Options:**
+
+   1. **Label:** "Off (default)"
+      **Description:** "Remove the `verbose` field from `<config_json>`, so Claude Code uses its default (off)."
+
+   2. **Label:** "On"
+      **Description:** "Set `\"verbose\": true` in `<config_json>`."
+
+3. Apply the answer:
+   - **Off:** remove the top-level `"verbose"` field from `<config_json>`. When the field is absent, change nothing.
+   - **On:** set the top-level `"verbose"` field to `true`.
+
+Preserve all other data in `<config_json>`. Only modify the `verbose` field.
 
 ## 4. Remove the retired Disciplined Engineering output style
 
@@ -322,6 +341,7 @@ Caveat to surface if any of these were present and removed: this also drops perm
 
 Tell the user:
 - Statusline has been configured (show the path used)
+- Verbose mode: the state the user chose (on or off), and whether `<config_json>` changed
 - Retired output style cleanup: if a stale `"outputStyle": "Disciplined Engineering"` default was removed, say so; otherwise say there was none to clean up
 - Auto-memory status (disabled, or left on)
 - Permission bundle reconciliation result. If the user chose "No, leave as-is" in §6b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
