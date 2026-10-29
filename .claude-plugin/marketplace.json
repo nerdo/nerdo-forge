@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "nerdo-essentials",
-      "version": "1.11.2",
+      "version": "1.11.3",
       "description": "Custom statusline with jj/language detection, setup command, and specialized agents (researcher, root-cause-analyzer, ui-tester)",
       "source": "./plugins/nerdo-essentials"
     },
