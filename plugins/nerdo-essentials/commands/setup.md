@@ -88,13 +88,44 @@ Verbose mode is the user's choice. Change the `verbose` field only as the user's
 
 Preserve all other data in `<config_json>`. Only modify the `verbose` field.
 
-## 4. Remove the retired Disciplined Engineering output style
+## 4. Ask about the terminal renderer
+
+The terminal renderer is the user's choice. Change the `tui` field only as the user's answer below directs.
+
+1. Read `<config_dir>/settings.json`. The current state comes from the top-level `"tui"` field: **Classic** when it is `"default"`, **Fullscreen** when it is `"fullscreen"`, and **Automatic** when it is absent.
+2. Use `AskUserQuestion`, with `<state>` replaced by the current state. Ask on every run, whatever the current state is.
+
+   **Question:** "The terminal renderer is currently <state>. Which renderer should Claude Code use? The classic renderer prints the conversation into your terminal's own scrollback, so tmux copy mode, scrolling, and search work on it. The fullscreen renderer is flicker-free, but it draws on a separate screen with its own scrollback, so tmux scrolling and search cannot reach the conversation."
+   **Header:** "Renderer"
+   **multiSelect:** false
+
+   **Options:**
+
+   1. **Label:** "Classic"
+      **Description:** "Set `\"tui\": \"default\"` in `<config_dir>/settings.json`. The conversation stays in the terminal's native scrollback."
+
+   2. **Label:** "Fullscreen"
+      **Description:** "Set `\"tui\": \"fullscreen\"` in `<config_dir>/settings.json`. Flicker-free, with its own scrollback."
+
+   3. **Label:** "Automatic"
+      **Description:** "Remove the `tui` field from `<config_dir>/settings.json`, so Claude Code picks the renderer itself."
+
+3. Apply the answer:
+   - **Classic:** set the top-level `"tui"` field to `"default"`.
+   - **Fullscreen:** set the top-level `"tui"` field to `"fullscreen"`.
+   - **Automatic:** remove the top-level `"tui"` field. When the field is absent, change nothing.
+
+Preserve all other settings. Only modify the `tui` field.
+
+The environment variables `CLAUDE_CODE_NO_FLICKER` and `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN` override the `tui` field for a session. When either one is set in the environment, tell the user that it overrides the choice.
+
+## 5. Remove the retired Disciplined Engineering output style
 
 The "Disciplined Engineering" output style has been retired. Its guidance is now delivered authoritatively by the prime-directive system, and a duplicated copy in an output style only risks drift — so the style file no longer ships with the plugin.
 
 Clean up any stale default an earlier setup left behind: read `<config_dir>/settings.json`, and if the top-level `"outputStyle"` field is set to `"Disciplined Engineering"`, remove that field entirely — a default pointing at a deleted style fails to resolve every session. Preserve all other settings. If `"outputStyle"` is absent or set to anything else, leave it untouched.
 
-## 5. Ask about disabling auto-memory
+## 6. Ask about disabling auto-memory
 
 Claude Code's auto-memory feature (on by default since v2.1.59) lets Claude write notes to `<config_dir>/projects/<project>/memory/MEMORY.md` based on your corrections and preferences. Disabling it is an optional personal preference.
 
@@ -106,15 +137,15 @@ If yes, read `<config_dir>/settings.json` and set the top-level `"autoMemoryEnab
 
 If no, skip this step. (The user can still toggle it later with `/memory` or the `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` environment variable.)
 
-## 6. Reconcile permission bundles
+## 7. Reconcile permission bundles
 
 Many tools are safe but annoying to approve one-by-one. This step reconciles `<config_dir>/settings.json`'s `permissions.allow` with a set of curated bundles. The bundle rule lists below are the source of truth: if the user marks a bundle ACTIVE, every rule in it is ensured present; if the user marks it INACTIVE, every rule in it is removed. Rules in `permissions.allow` that are NOT listed in any bundle are always preserved.
 
 The goal is an idempotent, symmetric operation: running setup repeatedly with the same selections should produce no change, and unchecking a previously-applied bundle should actually remove it.
 
-### 6a. Inspect current state
+### 7a. Inspect current state
 
-Read `<config_dir>/settings.json` and, for each of the six bundles listed in §6d, compute the current state by exact-string comparison against `permissions.allow`:
+Read `<config_dir>/settings.json` and, for each of the six bundles listed in §7d, compute the current state by exact-string comparison against `permissions.allow`:
 
 - **ON** — every rule in the bundle is present
 - **PARTIAL** — some rules present, some missing (include the count, e.g. `PARTIAL (11/13)`)
@@ -130,7 +161,7 @@ Display the result to the user verbatim before asking anything, for example:
 > - GitHub CLI (read-only): ON
 > - Transcript inspection: OFF
 
-### 6b. Ask whether to change anything
+### 7b. Ask whether to change anything
 
 Use `AskUserQuestion`:
 
@@ -146,11 +177,11 @@ Use `AskUserQuestion`:
 2. **Label:** "Yes, review and adjust"
    **Description:** "Show the bundle selector. Declare the desired end state explicitly; setup adds missing rules for checked bundles and removes rules for unchecked ones."
 
-If the user chose "No", skip to §7.
+If the user chose "No", skip to §8.
 
-### 6c. Collect desired end state
+### 7c. Collect desired end state
 
-`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §6a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
+`AskUserQuestion` caps options at four per question, so split the six bundles into two questions. For every option, append the current state from §7a to the label in parentheses (e.g. `Essentials (Recommended) — currently ON`) so the user can see at a glance what leaving it checked or unchecked means.
 
 **Question 1:** "Which of these bundles should be ACTIVE at the end of setup? Unchecked = rules REMOVED."
 **Header:** "Bundles 1/2"
@@ -182,7 +213,7 @@ If the user chose "No", skip to §7.
 2. **Label:** "Transcript inspection — currently <state>"
    **Description:** "Read access to `<config_dir>/projects/**` so agents can audit prior session logs (turn-by-turn JSONL records). Opt-in; off by default."
 
-### 6d. Apply the desired end state
+### 7d. Apply the desired end state
 
 For each of the six bundles, using the exact rule lists below:
 
@@ -308,13 +339,13 @@ Bash(gh --version)
 Read(<config_dir>/projects/**)
 ```
 
-This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §6d, compare against this substituted form — not the literal `<config_dir>` placeholder.
+This is the one bundle rule whose string is config-dir-dependent. Substitute `<config_dir>` with the resolved absolute path from step 0 before adding or removing it (e.g. `Read(/Users/me/.config/claude/projects/**)`). For the exact-match add/remove logic in §7d, compare against this substituted form — not the literal `<config_dir>` placeholder.
 
-### 6e. Migrate superseded MCP permission strings
+### 7e. Migrate superseded MCP permission strings
 
-Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-essentials now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-mcp-bundle_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-mcp-bundle_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §6d's "preserve unlisted rules" rule would otherwise leave them behind.
+Earlier versions of this bundle (and hand-added grants) used the **bare** `mcp__<server>` form for servers that nerdo-essentials now ships as plugin-bundled servers. Those bare strings no longer match the plugin's tools (which carry the `plugin_nerdo-mcp-bundle_` infix), so they are dead weight. The same applies to the **renamed** playwright server: the old `mcp__plugin_nerdo-mcp-bundle_playwright` form was superseded by the split `playwright-headless` / `playwright-headed` servers, so it too is now a stray. Because none of these are listed in any bundle, §7d's "preserve unlisted rules" rule would otherwise leave them behind.
 
-Whenever the user chose "Yes, review and adjust" in §6b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
+Whenever the user chose "Yes, review and adjust" in §7b, **remove every string below from `permissions.allow` by exact match**, regardless of which bundles were selected — they are superseded forms, never the correct identifier for a plugin-bundled server:
 
 ```
 mcp__context7
@@ -337,13 +368,14 @@ Do NOT remove anything outside the list above. The list is exhaustive for nerdo-
 
 Caveat to surface if any of these were present and removed: this also drops permissions for any *user/project-scope* server of the same name. That is intended — nerdo-essentials now provides these servers, and the dedup step (`claude mcp remove -s user <name>`) removes those user-scope copies. If you deliberately keep a user-scope copy of one of these and want it allowed, re-add its grant after setup.
 
-## 7. Report to the user
+## 8. Report to the user
 
 Tell the user:
 - Statusline has been configured (show the path used)
 - Verbose mode: the state the user chose (on or off), and whether `<config_json>` changed
+- Terminal renderer: the renderer the user chose (Classic, Fullscreen, or Automatic), and whether `<config_dir>/settings.json` changed
 - Retired output style cleanup: if a stale `"outputStyle": "Disciplined Engineering"` default was removed, say so; otherwise say there was none to clean up
 - Auto-memory status (disabled, or left on)
-- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §6b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
-- Superseded-string migration (§6e): if any bare/wildcard legacy MCP strings were removed, list them; otherwise say there were none.
+- Permission bundle reconciliation result. If the user chose "No, leave as-is" in §7b, say so. Otherwise, for each of the six bundles, report one of: `unchanged (ON)`, `unchanged (OFF)`, `added N rule(s)`, `removed N rule(s)`. If no net changes occurred, say so explicitly.
+- Superseded-string migration (§7e): if any bare/wildcard legacy MCP strings were removed, list them; otherwise say there were none.
 - They may need to restart Claude Code for changes to take effect
